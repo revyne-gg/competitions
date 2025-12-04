@@ -18,13 +18,13 @@ build:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   script:
     - echo "Restoring .NET dependencies..."
-    - dotnet restore organisers.csproj
+    - dotnet restore leagues.csproj
 
     - echo "Building .NET project..."
-    - dotnet build organisers.csproj -c Release --no-restore
+    - dotnet build leagues.csproj -c Release --no-restore
 
     - echo "Publishing..."
-    - dotnet publish organisers.csproj -c Release -o publish --no-restore
+    - dotnet publish leagues.csproj -c Release -o publish --no-restore
   artifacts:
     paths:
       - publish/
