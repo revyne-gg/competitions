@@ -1,0 +1,20 @@
+﻿using leagues.Infrastructure.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace leagues.Infrastructure.Services;
+
+public sealed class DatabaseService : DbContext
+{
+    public DbSet<LeagueEntity> Leagues => Set<LeagueEntity>();
+    public DbSet<DivisionEntity> Divisions => Set<DivisionEntity>();
+    public DbSet<DivisionGroupEntity> DivisionGroups => Set<DivisionGroupEntity>();
+    public DbSet<DivisionGroupStandingsEntity> Standings => Set<DivisionGroupStandingsEntity>();
+    public DbSet<DivisionGroupStandingsEntryEntity> StandingsEntities => Set<DivisionGroupStandingsEntryEntity>();
+    public DbSet<LeagueTeamEntity> Teams => Set<LeagueTeamEntity>();
+    public DbSet<RosterEntity> Rosters => Set<RosterEntity>();
+    
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseNpgsql("Host=127.0.0.1;Port=5432;Database=leagues;Username=brackzr;Password=secret");
+    }
+}
