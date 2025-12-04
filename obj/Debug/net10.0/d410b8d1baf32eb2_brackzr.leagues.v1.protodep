@@ -1,4 +1,0 @@
-obj\Debug\net10.0\protos\leagues/Brackzr.leagues.v1Grpc.cs \
-obj\Debug\net10.0\protos\leagues/BrackzrLeaguesV1.cs: C:/Users/marce/.nuget/packages/grpc.tools/2.64.0/build/native/include/google/protobuf/timestamp.proto\
- C:/Users/marce/.nuget/packages/grpc.tools/2.64.0/build/native/include/google/protobuf/empty.proto\
- protos/leagues/brackzr.leagues.v1.proto
