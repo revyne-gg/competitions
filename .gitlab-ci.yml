@@ -1,18 +1,89 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-- test
-- secret-detection
+  - build
+  - test
+  - deploy
+
+variables:
+  IMAGE_NAME: registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
+
+# Step 1: Build the .NET project
+build:
+  stage: build
+  tags:
+    - dotnet
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  script:
+    - echo "Restoring .NET dependencies..."
+    - dotnet restore organisers.csproj
+
+    - echo "Building .NET project..."
+    - dotnet build organisers.csproj -c Release --no-restore
+
+    - echo "Publishing..."
+    - dotnet publish organisers.csproj -c Release -o publish --no-restore
+  artifacts:
+    paths:
+      - publish/
+    expire_in: 1 week
+
+# Step 2: Run SAST Scan
 sast:
   stage: test
 include:
-- template: Security/Secret-Detection.gitlab-ci.yml
-variables:
-  SECRET_DETECTION_ENABLED: 'true'
-secret_detection:
-  stage: secret-detection
+  - template: Security/SAST.gitlab-ci.yml
+
+# Step 2b: Run .NET tests
+test:
+  stage: test
+  tags:
+    - dotnet
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  script:
+    - echo "Running tests..."
+    - dotnet test --no-build --verbosity normal
+  needs:
+    - build
+
+# Step 3: Build and push Docker :latest
+docker_push_latest:
+  stage: deploy
+  tags:
+    - dotnet
+  image: docker:20.10.7
+  script:
+    - echo "$CI_JOB_TOKEN" | docker login registry.gitlab.com -u gitlab-ci-token --password-stdin
+
+    # Build using the existing Dockerfile (expected at repo root)
+    - docker build -t $IMAGE_NAME:latest .
+
+    # Push :latest
+    - docker push $IMAGE_NAME:latest
+  only:
+    - main
+  needs:
+    - build
+
+# Step 3b: Build and push Docker image tagged with Git tag
+docker_push_tag:
+  stage: deploy
+  tags:
+    - dotnet
+  image: docker:20.10.7
+  script:
+    - echo "$CI_JOB_TOKEN" | docker login registry.gitlab.com -u gitlab-ci-token --password-stdin
+
+    # Tag based on Git tag
+    - export VERSION_TAG=$CI_COMMIT_REF_NAME
+
+    - docker build -t $IMAGE_NAME:$VERSION_TAG .
+
+    # Push version tag
+    - docker push $IMAGE_NAME:$VERSION_TAG
+  only:
+    - tags
+  needs:
+    - build

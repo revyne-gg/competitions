@@ -8,6 +8,6 @@ public sealed class CreateLeagueUseCase(ILeagueRepository repo)
 {
     public async Task<Result<LeagueDTO, AppError>> Execute(string name, string realmId, string userId, string tenantId)
     {
-        
+        throw new NotImplementedException();
     }
 }
