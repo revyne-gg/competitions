@@ -1,7 +1,7 @@
-﻿using leagues.Infrastructure.Entities;
+﻿using competitions.Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace leagues.Infrastructure.Services;
+namespace competitions.Infrastructure.Services;
 
 public sealed class DatabaseService : DbContext
 {
@@ -15,6 +15,6 @@ public sealed class DatabaseService : DbContext
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql("Host=127.0.0.1;Port=5432;Database=leagues;Username=brackzr;Password=secret");
+        optionsBuilder.UseNpgsql("Host=127.0.0.1;Port=5432;Database=competitions;Username=brackzr;Password=secret");
     }
 }

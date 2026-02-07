@@ -1,4 +1,4 @@
-﻿namespace leagues.Domain.Models;
+﻿namespace competitions.Domain.Models;
 
 public enum RealmMemberRole
 {

@@ -1,12 +1,12 @@
-﻿using leagues.Application;
-using leagues.Application.Ports;
-using leagues.Domain.Models;
-using leagues.Infrastructure.Entities;
-using leagues.Infrastructure.Services;
-using leagues.Shared;
+﻿using competitions.Application;
+using competitions.Application.Ports;
+using competitions.Domain.Models;
+using competitions.Infrastructure.Entities;
+using competitions.Infrastructure.Services;
+using competitions.Shared;
 using Microsoft.EntityFrameworkCore;
 
-namespace leagues.Infrastructure.Repositories;
+namespace competitions.Infrastructure.Repositories;
 
 public class LeagueRepository(DatabaseService db): ILeagueRepository
 {
@@ -119,7 +119,8 @@ public class LeagueRepository(DatabaseService db): ILeagueRepository
             {
                 LeagueId = league.Id,
                 TeamId = team.TeamId,
-                CreatedAt = team.CreatedAt
+                CreatedAt = team.CreatedAt,
+                TenantId = league.TenantId
             };
             
             db.LeagueTeams.Add(teamEntity);

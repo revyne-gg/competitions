@@ -1,4 +1,4 @@
-﻿namespace leagues.Infrastructure.Entities;
+﻿namespace competitions.Infrastructure.Entities;
 
 public class DivisionGroupStandingsEntity
 {

@@ -1,4 +1,4 @@
-﻿namespace leagues.Shared;
+﻿namespace competitions.Shared;
 
 public readonly struct Unit 
 {

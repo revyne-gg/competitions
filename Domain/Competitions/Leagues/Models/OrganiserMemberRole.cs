@@ -1,4 +1,4 @@
-﻿namespace leagues.Domain.Models;
+﻿namespace competitions.Domain.Competitions.Leagues.Models;
 
 public enum OrganiserMemberRole
 {
@@ -12,7 +12,8 @@ public static class OrganiserMemberRoleExtensions
 {
     public static OrganiserMemberRole FromString(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value)) {
+        if (string.IsNullOrWhiteSpace(value)) 
+        {
             return OrganiserMemberRole.None;
         }
         

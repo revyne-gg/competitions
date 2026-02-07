@@ -1,3 +1,9 @@
-﻿namespace leagues.Application.DTO;
+﻿namespace competitions.Application.DTO;
 
-public record LeagueDTO();
+public record LeagueDTO(
+    string Id,
+    string Name,
+    string Slug,
+    string Description,
+    DateTime CreatedAt
+);

@@ -1,4 +1,4 @@
-using leagues.Services;
+using competitions.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

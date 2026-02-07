@@ -1,4 +1,4 @@
-﻿namespace leagues.Application;
+﻿namespace competitions.Application;
 
 public enum RepositoryError
 {

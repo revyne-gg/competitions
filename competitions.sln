@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "leagues", "leagues.csproj", "{34DBBB6F-5C4D-443D-B380-4F42DCFCFC07}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "competitions", "competitions.csproj", "{34DBBB6F-5C4D-443D-B380-4F42DCFCFC07}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,12 +2,13 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using leagues.Application;
-using leagues.Application.Ports;
-using leagues.Domain.Models;
-using leagues.Shared;
+using competitions.Application;
+using competitions.Application.Ports;
+using competitions.Domain.Competitions.Leagues.Models;
+using competitions.Domain.Models;
+using competitions.Shared;
 
-namespace leagues.Infrastructure.Services;
+namespace competitions.Infrastructure.Services;
 
 [Serializable]
 class RelationTupleResponse

@@ -1,7 +1,8 @@
-﻿using leagues.Domain.Models;
-using leagues.Shared;
+﻿using competitions.Domain.Competitions.Leagues.Models;
+using competitions.Domain.Models;
+using competitions.Shared;
 
-namespace leagues.Application.Ports;
+namespace competitions.Application.Ports;
 
 public interface IPermissionService
 {

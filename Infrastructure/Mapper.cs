@@ -1,7 +1,7 @@
-﻿using leagues.Domain.Models;
-using leagues.Infrastructure.Entities;
+﻿using competitions.Domain.Models;
+using competitions.Infrastructure.Entities;
 
-namespace leagues.Infrastructure;
+namespace competitions.Infrastructure;
 
 internal static class Mapper
 {

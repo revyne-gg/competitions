@@ -1,8 +1,8 @@
-﻿namespace leagues.Application;
+﻿namespace competitions.Application;
 
 public enum AppError
 {
-    InternalServerError = 1,
+    InternalError = 1,
     NotFound = 2,
     BadRequest = 3,
     Unauthorized = 4,

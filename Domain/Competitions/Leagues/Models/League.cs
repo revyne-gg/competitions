@@ -1,4 +1,6 @@
-﻿namespace leagues.Domain.Models;
+﻿using competitions.Domain.Competitions.Leagues.Models;
+
+namespace competitions.Domain.Models;
 
 public class League
 {
