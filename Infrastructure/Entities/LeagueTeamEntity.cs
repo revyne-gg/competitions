@@ -2,7 +2,7 @@
 
 public class LeagueTeamEntity
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public required string LeagueId { get; set; }
     public required string TeamId { get; set; }
     public LeagueEntity League { get; set; }

@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Protobuf Include="protos/leagues/brackzr.leagues.v1.proto" GrpcServices="Server"/>
+        <Protobuf Include="protos/services/competitions/v1/competitions_service.proto" GrpcServices="Server"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Transport\" />
+      <Folder Include="Domain\Competitions\Tournaments\Models\RoundRobin\" />
     </ItemGroup>
 
 </Project>

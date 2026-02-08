@@ -6,5 +6,6 @@ public enum RepositoryError
     DatabaseConcurrencyError = 2,
     DuplicateLeague = 2,
     NoPermission = 3,
-    InternalError = 4
+    NotFound = 4,
+    InternalError = 5
 }

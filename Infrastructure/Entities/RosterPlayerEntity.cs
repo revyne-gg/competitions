@@ -2,7 +2,7 @@
 
 public class RosterPlayerEntity
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public int RosterId { get; set; }
     public string PlayerId { get; set; }
     public DateTime CreatedAt { get; set; }

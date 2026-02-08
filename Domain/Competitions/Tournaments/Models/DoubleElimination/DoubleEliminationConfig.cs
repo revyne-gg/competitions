@@ -1,6 +1,6 @@
 ﻿namespace competitions.Domain.Competitions.Tournaments.Models.DoubleElimination;
 
-public class UpperBracket
+public record DoubleEliminationConfig
 {
-    
+    public bool BracketReset { get; set; }
 }

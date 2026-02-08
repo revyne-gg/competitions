@@ -2,5 +2,5 @@
 
 public class DivisionGroupStandingsEntity
 {
-    
+    public long Id { get; set; }
 }

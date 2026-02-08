@@ -33,12 +33,14 @@ record RelationTuple(
 
 public class KetoPermissionService : IPermissionService
 {
+    private readonly ILogger<KetoPermissionService> _logger;
     private readonly HttpClient _client;
     private readonly string _ketoUrl;
     private readonly string _ketoAdminUrl;
 
-    public KetoPermissionService(string ketoUrl, string ketoAdminUrl)
+    public KetoPermissionService(ILogger<KetoPermissionService> logger, string ketoUrl, string ketoAdminUrl)
     {
+        _logger = logger;
         _ketoUrl = ketoUrl;
         _ketoAdminUrl = ketoAdminUrl;
         _client = new HttpClient();
@@ -48,33 +50,149 @@ public class KetoPermissionService : IPermissionService
         );
     }
 
-    public Task<Result<Unit, PermissionError>> AddTeamToLeague(string teamId, string leagueId)
+    public async Task<Result<Unit, PermissionError>> AddTeamToLeague(string teamId, string leagueId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var tuple = new RelationTuple("League", leagueId, "team", teamId);
+
+            var json = JsonSerializer.Serialize(tuple);
+
+            var request = new HttpRequestMessage(HttpMethod.Put, $"{_ketoAdminUrl}/admin/relation-tuples")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            var response = await _client.SendAsync(request);
+
+            return !response.IsSuccessStatusCode ? 
+                PermissionError.InternalError : 
+                Unit.Value;
+        }
+        catch (Exception e)
+        {
+            return PermissionError.InternalError;
+        }
     }
 
-    public Task<Result<Unit, PermissionError>> RemoveTeamFromLeague(string teamId, string leagueId)
+    public async Task<Result<Unit, PermissionError>> RemoveTeamFromLeague(string teamId, string leagueId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var query = $"?namespace=League&object={leagueId}&relation=team&subject_id={teamId}";
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{_ketoAdminUrl}/admin/relation-tuples{query}");
+            var response = await _client.SendAsync(request);
+
+            return !response.IsSuccessStatusCode
+                ? PermissionError.InternalError
+                : Unit.Value;
+        }
+        catch (Exception)
+        {
+            return PermissionError.InternalError;
+        }
     }
 
-    public Task<Result<Unit, PermissionError>> AddUserToRoster(string userId, string teamId, string leagueId)
+    public async Task<Result<Unit, PermissionError>> AddUserToRoster(string userId, string teamId, string leagueId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var tuple = new RelationTuple("LeagueRoster", $"{leagueId}:{teamId}", "member", userId);
+            var json = JsonSerializer.Serialize(tuple);
+
+            var request = new HttpRequestMessage(HttpMethod.Put, $"{_ketoAdminUrl}/admin/relation-tuples")
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            var response = await _client.SendAsync(request);
+
+            return !response.IsSuccessStatusCode
+                ? PermissionError.InternalError
+                : Unit.Value;
+        }
+        catch (Exception)
+        {
+            return PermissionError.InternalError;
+        }
     }
 
-    public Task<Result<Unit, PermissionError>> RemoveUserFromRoster(string userId, string teamId, string leagueId)
+    public async Task<Result<Unit, PermissionError>> RemoveUserFromRoster(string userId, string teamId, string leagueId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var query = $"?namespace=LeagueRoster&object={leagueId}:{teamId}&relation=member&subject_id={userId}";
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{_ketoAdminUrl}/admin/relation-tuples{query}");
+            var response = await _client.SendAsync(request);
+
+            return !response.IsSuccessStatusCode
+                ? PermissionError.InternalError
+                : Unit.Value;
+        }
+        catch (Exception)
+        {
+            return PermissionError.InternalError;
+        }
     }
 
-    public Task<Result<RealmMemberRole, PermissionError>> GetRoleForUserInRealm(string userId, string realmId)
+    public async Task<Result<RealmMemberRole, PermissionError>> GetRoleForUserInRealm(string userId, string realmId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var query = $"?namespace=Realm&object={realmId}&subject_id={userId}";
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_ketoUrl}/relation-tuples{query}");
+            var response = await _client.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return PermissionError.InternalError;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<RelationTupleResponse>(content);
+
+            if (result is null || result.RelationTuples.Count == 0)
+            {
+                return RealmMemberRole.None;
+            }
+
+            var relation = result.RelationTuples[0].Relation;
+            return RealmMemberRoleExtensions.FromString(relation);
+        }
+        catch (Exception)
+        {
+            return PermissionError.InternalError;
+        }
     }
 
-    public Task<Result<OrganiserMemberRole, PermissionError>> GetRoleForUserInOrganiser(string userId, string organiserId)
+    public async Task<Result<OrganiserMemberRole, PermissionError>> GetRoleForUserInOrganiser(string userId, string organiserId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var query = $"?namespace=Organiser&object={organiserId}&subject_id={userId}";
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_ketoUrl}/relation-tuples{query}");
+            var response = await _client.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return PermissionError.InternalError;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<RelationTupleResponse>(content);
+
+            if (result is null || result.RelationTuples.Count == 0)
+            {
+                return OrganiserMemberRole.None;
+            }
+
+            var relation = result.RelationTuples[0].Relation;
+            return OrganiserMemberRoleExtensions.FromString(relation);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error getting role for user in organiser");
+            return PermissionError.InternalError;
+        }
     }
 }

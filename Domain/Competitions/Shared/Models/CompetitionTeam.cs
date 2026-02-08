@@ -2,7 +2,7 @@
 
 namespace competitions.Domain.Models;
 
-public class LeagueTeam
+public class CompetitionTeam
 {
     public required string LeagueId { get; set; }
     public required string TeamId { get; set; }

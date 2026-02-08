@@ -1,19 +1,20 @@
 ﻿using competitions.Application.Ports;
 using competitions.Domain.Competitions.Leagues.Models;
+using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Domain.Models;
 using competitions.Shared;
 
 namespace competitions.Application.UseCases;
 
-public sealed class CreateLeagueUseCase(
-    ILeagueRepository repo,
+public sealed class CreateTournamentUseCase(
+    ITournamentRepository repo,
     IPermissionService permissionService,
     IIDGenerator idGenerator,
     IDiscriminatorGenerator discriminatorGenerator
 )
 {
-    public async Task<Result<League, AppError>> Execute(
-        LeagueConfig config,
+    public async Task<Result<Tournament, AppError>> Execute(
+        TournamentConfig config,
         string organiserId,
         string realmId, 
         string userId, 
@@ -43,7 +44,7 @@ public sealed class CreateLeagueUseCase(
         {
             return AppError.Forbidden;
         }
-        
+
         var discriminator = "";
         bool exist = false;
         do
@@ -67,21 +68,25 @@ public sealed class CreateLeagueUseCase(
             }
         } while (exist);
         
-        var leagueId = await idGenerator.Generate();
+        var tournamentId = await idGenerator.Generate();
 
-        var league = new League
+        var tournament = new Tournament
         {
-            Id = leagueId,
+            Id = $"tournament_{tournamentId}",
             Name = config.Name,
+            Format = config.Format,
             Discriminator = discriminator,
             Description = config.Description,
-            RealmId = realmId,
-            OrganiserId = organiserId,
+            CreatedAt = DateTime.UtcNow,
             TenantId = tenantId,
         };
 
-        await repo.AddAsync(league);
+        var result = await repo.AddAsync(tournament);
+        if (result.IsFailure)
+        {
+            return AppError.InternalError;
+        }
 
-        return league;
+        return tournament;
     }
 }

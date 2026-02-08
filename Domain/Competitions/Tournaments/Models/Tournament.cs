@@ -1,6 +1,10 @@
-﻿namespace competitions.Domain.Competitions.Tournaments.Models;
+﻿using competitions.Domain.Competitions.Shared.Models;
+using competitions.Domain.Models;
 
-public class Tournament
+namespace competitions.Domain.Competitions.Tournaments.Models;
+
+public class Tournament : Competition
 {
-    
+    public override CompetitionType Type => CompetitionType.Tournament;
+    public TournamentFormat Format { get; set; }
 }

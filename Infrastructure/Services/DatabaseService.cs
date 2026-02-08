@@ -5,13 +5,16 @@ namespace competitions.Infrastructure.Services;
 
 public sealed class DatabaseService : DbContext
 {
-    public DbSet<LeagueEntity> Leagues => Set<LeagueEntity>();
+    public DbSet<CompetitionEntity> Competitions => Set<CompetitionEntity>();
+    public DbSet<TournamentConfigEntity> TournamentConfigs => Set<TournamentConfigEntity>();
+    public DbSet<LeagueConfigEntity> LeagueConfigs => Set<LeagueConfigEntity>();
     public DbSet<DivisionEntity> Divisions => Set<DivisionEntity>();
     public DbSet<DivisionGroupEntity> DivisionGroups => Set<DivisionGroupEntity>();
     public DbSet<DivisionGroupStandingsEntity> Standings => Set<DivisionGroupStandingsEntity>();
     public DbSet<DivisionGroupStandingsEntryEntity> StandingsEntities => Set<DivisionGroupStandingsEntryEntity>();
     public DbSet<LeagueTeamEntity> LeagueTeams => Set<LeagueTeamEntity>();
     public DbSet<RosterEntity> Rosters => Set<RosterEntity>();
+    public DbSet<MatchEntity> Matches => Set<MatchEntity>();
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

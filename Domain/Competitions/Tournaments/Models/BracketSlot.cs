@@ -1,6 +1,7 @@
 ﻿namespace competitions.Domain.Competitions.Tournaments.Models;
 
-public class TournamentBracket
+public enum BracketSlot
 {
-    
+    Home,
+    Away
 }

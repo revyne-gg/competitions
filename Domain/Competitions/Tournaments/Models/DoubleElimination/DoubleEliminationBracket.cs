@@ -2,5 +2,6 @@
 
 public class DoubleEliminationBracket
 {
-    
+    private Bracket _lowerBracket;
+    private Bracket _upperBracket;
 }
