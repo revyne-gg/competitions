@@ -1,7 +1,24 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - project: 'esports-league/ci-templates'
+    file: '/scw-power.yml'
+    ref: 'main'
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+    - when: never
+
 stages:
+  - warmup
   - build
   - test
+  - migrate
+  - publish
   - deploy
+  - cooldown
 
 variables:
   IMAGE_NAME: registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
@@ -10,7 +27,20 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_FORCE_HTTPS: "true"
 
-# Step 1: Build the .NET project
+start-fast-server:
+  stage: warmup
+  extends: .start-build-server
+
+stop-fast-server:
+  stage: cooldown
+  extends: .stop-build-server
+  when: always
+  needs:
+    - job: docker_push_latest
+      optional: true
+    - job: docker_push_tag
+      optional: true
+
 build:
   stage: build
   tags:
@@ -18,25 +48,25 @@ build:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   script:
     - echo "Restoring .NET dependencies..."
-    - dotnet restore leagues.csproj
+    - dotnet restore competitions.csproj
 
     - echo "Building .NET project..."
-    - dotnet build leagues.csproj -c Release --no-restore
+    - dotnet build competitions.csproj -c Release --no-restore
 
     - echo "Publishing..."
-    - dotnet publish leagues.csproj -c Release -o publish --no-restore
+    - dotnet publish competitions.csproj -c Release -o publish --no-restore
   artifacts:
     paths:
       - publish/
+      - "**/obj/"
+      - "**/bin/"
     expire_in: 1 week
+  needs:
+    - start-fast-server
 
-# Step 2: Run SAST Scan
 sast:
   stage: test
-include:
-  - template: Security/SAST.gitlab-ci.yml
 
-# Step 2b: Run .NET tests
 test:
   stage: test
   tags:
@@ -48,42 +78,54 @@ test:
   needs:
     - build
 
-# Step 3: Build and push Docker :latest
-docker_push_latest:
-  stage: deploy
+run-migrations:
+  stage: migrate
   tags:
     - dotnet
-  image: docker:20.10.7
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  script:
+    - echo "Running migrations for $CI_PROJECT_NAME..."
+    - dotnet tool restore
+    - dotnet restore competitions.csproj
+    - export DATABASE_URL=$DATABASE_URL
+    - dotnet build competitions.csproj -c Release --no-restore
+    - dotnet ef database update --project competitions.csproj
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+  needs:
+    - test
+
+docker_push_latest:
+  stage: publish
+  tags:
+    - dotnet
+  image: docker:27
   script:
     - echo "$CI_JOB_TOKEN" | docker login registry.gitlab.com -u gitlab-ci-token --password-stdin
 
-    # Build using the existing Dockerfile (expected at repo root)
-    - docker build -t $IMAGE_NAME:latest .
-
-    # Push :latest
-    - docker push $IMAGE_NAME:latest
+    - docker buildx create --use
+    - docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_NAME:latest -t $IMAGE_NAME:$CI_COMMIT_SHA --push .
   only:
     - main
   needs:
-    - build
+    - run-migrations
+  environment: staging
 
-# Step 3b: Build and push Docker image tagged with Git tag
 docker_push_tag:
-  stage: deploy
+  stage: publish
   tags:
     - dotnet
-  image: docker:20.10.7
+  image: docker:27
   script:
     - echo "$CI_JOB_TOKEN" | docker login registry.gitlab.com -u gitlab-ci-token --password-stdin
 
-    # Tag based on Git tag
     - export VERSION_TAG=$CI_COMMIT_REF_NAME
 
-    - docker build -t $IMAGE_NAME:$VERSION_TAG .
-
-    # Push version tag
-    - docker push $IMAGE_NAME:$VERSION_TAG
+    - docker buildx create --use
+    - docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_NAME:$VERSION_TAG --push .
   only:
     - tags
   needs:
-    - build
+    - run-migrations
+  environment: production
