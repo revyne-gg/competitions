@@ -1,9 +1,5 @@
 include:
   - template: Security/SAST.gitlab-ci.yml
-  - project: 'esports-league/ci-templates'
-    file: '/scw-power.yml'
-    ref: 'main'
-
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -12,13 +8,11 @@ workflow:
     - when: never
 
 stages:
-  - warmup
   - build
   - test
   - migrate
   - publish
   - deploy
-  - cooldown
 
 variables:
   IMAGE_NAME: registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
@@ -27,19 +21,6 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_FORCE_HTTPS: "true"
 
-start-fast-server:
-  stage: warmup
-  extends: .start-build-server
-
-stop-fast-server:
-  stage: cooldown
-  extends: .stop-build-server
-  when: always
-  needs:
-    - job: docker_push_latest
-      optional: true
-    - job: docker_push_tag
-      optional: true
 
 build:
   stage: build
@@ -61,8 +42,6 @@ build:
       - "**/obj/"
       - "**/bin/"
     expire_in: 1 week
-  needs:
-    - start-fast-server
 
 sast:
   stage: test
