@@ -36,7 +36,7 @@ internal static class Mapper
             };
         }
 
-        internal League ToLeagueDomain()
+        internal League ToLeagueDomain(LeagueConfigEntity? config = null)
         {
             var league = new League
             {
@@ -47,7 +47,80 @@ internal static class Mapper
                 TenantId = entity.TenantId,
             };
 
+            if (config is not null)
+            {
+                league.Description = config.Description;
+                league.OrganiserId = config.OrganiserId;
+                league.RealmId = config.RealmId;
+                league.State = config.State;
+                league.IsRegistrationOpen = config.IsRegistrationOpen;
+                league.RegistrationPeriodStart = config.RegistrationPeriodStart;
+                league.RegistrationPeriodEnd = config.RegistrationPeriodEnd;
+                league.LeaguePeriodStart = config.LeaguePeriodStart;
+                league.LeaguePeriodEnd = config.LeaguePeriodEnd;
+                league.DeletedAt = config.DeletedAt;
+                league.DeletedBy = config.DeletedBy;
+            }
+
             return league;
+        }
+    }
+
+    extension (DivisionEntity entity)
+    {
+        internal Division ToDomain()
+        {
+            return new Division
+            {
+                Id = entity.Id,
+                LeagueId = entity.CompetitionId,
+                Name = entity.Name,
+                Slug = entity.Slug,
+                Order = entity.Order,
+                BestOf = entity.BestOf,
+                MaxTeamsPerGroup = entity.MaxTeamsPerGroup,
+                TenantId = entity.TenantId,
+                CreatedAt = entity.CreatedAt,
+            };
+        }
+    }
+
+    extension (DivisionGroupEntity entity)
+    {
+        internal DivisionGroup ToDomain()
+        {
+            return new DivisionGroup
+            {
+                Id = entity.Id,
+                DivisionId = entity.DivisionId,
+                LeagueId = entity.Division?.CompetitionId ?? string.Empty,
+                Name = entity.Name,
+                Slug = entity.Slug,
+                Order = entity.Order,
+                TenantId = entity.TenantId,
+                CreatedAt = entity.CreatedAt,
+                Teams = entity.Teams?.Select(t => new DivisionGroupTeam
+                {
+                    TeamId = t.TeamId,
+                    GroupId = t.GroupId,
+                    LeagueId = entity.Division?.CompetitionId ?? string.Empty,
+                }).ToList() ?? new(),
+            };
+        }
+    }
+
+    extension (LeagueTeamEntity entity)
+    {
+        internal CompetitionTeam ToDomain()
+        {
+            return new CompetitionTeam
+            {
+                LeagueId = entity.LeagueId,
+                TeamId = entity.TeamId,
+                TenantId = entity.TenantId,
+                CreatedAt = entity.CreatedAt,
+                Status = entity.Status,
+            };
         }
     }
 

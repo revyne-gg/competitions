@@ -9,12 +9,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace competitions.Infrastructure.Repositories;
 
-public class TournamentRepository(DatabaseService db) : ITournamentRepository
+public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) : ITournamentRepository
 {
     public async Task<Result<Tournament, RepositoryError>> GetByIdAsync(string id, string tenantId)
     {
         try
         {
+            var db = await dbFactory.CreateDbContextAsync();
+
             var competition = await db.Competitions
                 .FirstOrDefaultAsync(x => x.Id == id && x.Type == CompetitionType.Tournament && x.TenantId == tenantId);
 
@@ -42,6 +44,8 @@ public class TournamentRepository(DatabaseService db) : ITournamentRepository
     {
         try
         {
+            var db = await dbFactory.CreateDbContextAsync();
+
             var competition = await db.Competitions
                 .FirstOrDefaultAsync(x =>
                     x.Name == name &&
@@ -70,6 +74,8 @@ public class TournamentRepository(DatabaseService db) : ITournamentRepository
     {
         try
         {
+            var db = await dbFactory.CreateDbContextAsync();
+
             var entity = new CompetitionEntity
             {
                 Id = tournament.Id,
@@ -103,6 +109,8 @@ public class TournamentRepository(DatabaseService db) : ITournamentRepository
     {
         try
         {
+            var db = await dbFactory.CreateDbContextAsync();
+
             var entity = await db.Competitions
                 .FirstOrDefaultAsync(x => x.Id == tournament.Id && x.TenantId == tournament.TenantId);
 

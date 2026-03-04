@@ -1,10 +1,22 @@
 ﻿using competitions.Application;
+using competitions.Domain.Models;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Revyne.Services.Competitions.V1;
+using GrpcLeague = Revyne.Services.Competitions.V1.League;
+using GrpcDivision = Revyne.Services.Competitions.V1.Division;
+using GrpcDivisionGroup = Revyne.Services.Competitions.V1.DivisionGroup;
+using GrpcLeagueStatus = Revyne.Services.Competitions.V1.LeagueStatus;
+using GrpcRegistrationStatus = Revyne.Services.Competitions.V1.RegistrationStatus;
+using DomainLeague = competitions.Domain.Models.League;
+using DomainLeagueStatus = competitions.Domain.Models.LeagueStatus;
+using DomainDivision = competitions.Domain.Models.Division;
+using DomainDivisionGroup = competitions.Domain.Models.DivisionGroup;
+using DomainRegistrationStatus = competitions.Domain.Models.RegistrationStatus;
 
 namespace competitions.Transport;
 
+// Domain → gRPC mappings
 internal static class Mapper
 {
     extension(AppError error)
@@ -20,7 +32,7 @@ internal static class Mapper
             };
         }
     }
-    
+
     extension(TournamentFormat format)
     {
         internal Domain.Competitions.Tournaments.Models.TournamentFormat ToDomain()
@@ -36,11 +48,11 @@ internal static class Mapper
                 case TournamentFormat.Swiss:
                     return Domain.Competitions.Tournaments.Models.TournamentFormat.Swiss;
             }
-            
+
             return default;
-        } 
+        }
     }
-    
+
     extension(Domain.Competitions.Tournaments.Models.TournamentFormat format)
     {
         internal TournamentFormat ToGrpc()
@@ -56,9 +68,9 @@ internal static class Mapper
                 case Domain.Competitions.Tournaments.Models.TournamentFormat.Swiss:
                     return TournamentFormat.Swiss;
             }
-            
+
             return default;
-        } 
+        }
     }
 
     extension(Domain.Competitions.Tournaments.Models.Tournament tournament)
@@ -75,5 +87,127 @@ internal static class Mapper
                 CreatedAt = tournament.CreatedAt.ToTimestamp()
             };
         }
-    } 
+    }
+
+    // ── League mappings ────────────────────────────────────────────────────────
+
+    extension(DomainLeague league)
+    {
+        internal GrpcLeague ToGrpc()
+        {
+            var grpc = new GrpcLeague
+            {
+                Id = league.Id,
+                Name = league.Name,
+                Discriminator = league.Discriminator,
+                Description = league.Description ?? string.Empty,
+                OrganiserId = league.OrganiserId ?? string.Empty,
+                RealmId = league.RealmId ?? string.Empty,
+                State = league.State.ToGrpc(),
+                CreatedAt = league.CreatedAt.ToTimestamp(),
+            };
+            if (league.RegistrationPeriodStart.HasValue)
+                grpc.RegistrationPeriodStart = league.RegistrationPeriodStart.Value.ToTimestamp();
+            if (league.RegistrationPeriodEnd.HasValue)
+                grpc.RegistrationPeriodEnd = league.RegistrationPeriodEnd.Value.ToTimestamp();
+            if (league.LeaguePeriodStart.HasValue)
+                grpc.LeaguePeriodStart = league.LeaguePeriodStart.Value.ToTimestamp();
+            if (league.LeaguePeriodEnd.HasValue)
+                grpc.LeaguePeriodEnd = league.LeaguePeriodEnd.Value.ToTimestamp();
+            return grpc;
+        }
+    }
+
+    extension(DomainLeagueStatus status)
+    {
+        internal GrpcLeagueStatus ToGrpc() => status switch
+        {
+            DomainLeagueStatus.Public   => GrpcLeagueStatus.Public,
+            DomainLeagueStatus.Live     => GrpcLeagueStatus.Live,
+            DomainLeagueStatus.Finished => GrpcLeagueStatus.Finished,
+            _                           => GrpcLeagueStatus.Hidden,
+        };
+    }
+
+    // ── Division mappings ──────────────────────────────────────────────────────
+
+    extension(DomainDivision division)
+    {
+        internal GrpcDivision ToGrpc()
+        {
+            return new GrpcDivision
+            {
+                Id = division.Id,
+                LeagueId = division.LeagueId,
+                Name = division.Name,
+                Slug = division.Slug,
+                Order = division.Order,
+                BestOf = division.BestOf,
+                MaxTeamsPerGroup = division.MaxTeamsPerGroup,
+                CreatedAt = division.CreatedAt.ToTimestamp(),
+            };
+        }
+    }
+
+    // ── DivisionGroup mappings ─────────────────────────────────────────────────
+
+    extension(DomainDivisionGroup group)
+    {
+        internal GrpcDivisionGroup ToGrpc()
+        {
+            var grpc = new GrpcDivisionGroup
+            {
+                Id = group.Id,
+                DivisionId = group.DivisionId,
+                LeagueId = group.LeagueId,
+                Name = group.Name,
+                Slug = group.Slug,
+                Order = group.Order,
+                CreatedAt = group.CreatedAt.ToTimestamp(),
+            };
+            grpc.Teams.AddRange(group.Teams.Select(t => new DivisionGroupTeamSummary { TeamId = t.TeamId }));
+            return grpc;
+        }
+    }
+
+    // ── Registration mappings ──────────────────────────────────────────────────
+
+    extension(CompetitionTeam team)
+    {
+        internal LeagueRegistration ToGrpc()
+        {
+            return new LeagueRegistration
+            {
+                LeagueId = team.LeagueId,
+                TeamId = team.TeamId,
+                Status = team.Status.ToGrpc(),
+                CreatedAt = team.CreatedAt.ToTimestamp(),
+            };
+        }
+    }
+
+    extension(DomainRegistrationStatus status)
+    {
+        internal GrpcRegistrationStatus ToGrpc() => status switch
+        {
+            DomainRegistrationStatus.Approved => GrpcRegistrationStatus.Approved,
+            DomainRegistrationStatus.Rejected => GrpcRegistrationStatus.Rejected,
+            _                                 => GrpcRegistrationStatus.Pending,
+        };
+    }
+}
+
+// gRPC → Domain mappings (in separate static class to avoid extension block collisions)
+internal static class GrpcInputMapper
+{
+    extension(GrpcLeagueStatus status)
+    {
+        internal DomainLeagueStatus ToDomain() => status switch
+        {
+            GrpcLeagueStatus.Public   => DomainLeagueStatus.Public,
+            GrpcLeagueStatus.Live     => DomainLeagueStatus.Live,
+            GrpcLeagueStatus.Finished => DomainLeagueStatus.Finished,
+            _                         => DomainLeagueStatus.Hidden,
+        };
+    }
 }

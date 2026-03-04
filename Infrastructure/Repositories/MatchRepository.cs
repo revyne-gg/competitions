@@ -8,12 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace competitions.Infrastructure.Repositories;
 
-public class MatchRepository(DatabaseService db) : IMatchRepository
+public class MatchRepository(IDbContextFactory<DatabaseService> dbFactory) : IMatchRepository
 {
     public async Task<Result<Match, RepositoryError>> GetByIdAsync(string id, string tenantId)
     {
         try
         {
+            var db = await dbFactory.CreateDbContextAsync();
+
             var entity = await db.Matches
                 .Include(m => m.Competition)
                 .FirstOrDefaultAsync(m => m.Id == id && m.TenantId == tenantId);
@@ -35,6 +37,8 @@ public class MatchRepository(DatabaseService db) : IMatchRepository
     {
         try
         {
+            var db = await dbFactory.CreateDbContextAsync();
+
             var entity = await db.Matches
                 .FirstOrDefaultAsync(m => m.Id == match.Id && m.TenantId == match.TenantId);
 

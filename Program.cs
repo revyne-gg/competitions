@@ -8,13 +8,21 @@ using competitions.Infrastructure.Repositories;
 using competitions.Infrastructure.Services;
 using competitions.Services;
 using competitions.Transport.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddGrpc();
 
-builder.Services.AddSingleton<DatabaseService>();
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (databaseUrl is null)
+{
+    Environment.FailFast("DATABASE_URL environment variable is required.");
+}
+
+builder.Services.AddDbContextFactory<DatabaseService>(options =>
+    options.UseNpgsql(databaseUrl));
 builder.Services.AddSingleton<IIDGenerator, NanoIdGenerator>();
 builder.Services.AddSingleton<IDiscriminatorGenerator, NanoIdGenerator>();
 builder.Services.AddSingleton<IPermissionService, KetoPermissionService>((args) =>
@@ -51,6 +59,11 @@ builder.Services.AddScoped<ICompetitionEngine, LeagueEngine>();
 
 builder.Services.AddScoped<CreateTournamentUseCase>();
 builder.Services.AddScoped<CreateLeagueUseCase>();
+builder.Services.AddScoped<CreateDivisionUseCase>();
+builder.Services.AddScoped<CreateDivisionGroupUseCase>();
+builder.Services.AddScoped<AddTeamToLeagueUseCase>();
+builder.Services.AddScoped<RegisterTeamForLeagueUseCase>();
+builder.Services.AddScoped<UnregisterTeamFromLeagueUseCase>();
 builder.Services.AddScoped<ReportMatchScoreUseCase>();
 
 var app = builder.Build();
@@ -58,5 +71,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.MapGrpcService<MatchesService>();
 app.MapGrpcService<CompetitionsService>();
+app.MapGrpcService<LeaguesService>();
 
 app.Run();

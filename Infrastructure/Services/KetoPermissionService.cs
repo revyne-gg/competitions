@@ -195,4 +195,35 @@ public class KetoPermissionService : IPermissionService
             return PermissionError.InternalError;
         }
     }
+
+    public async Task<Result<TeamMemberRole, PermissionError>> GetRoleForUserInTeam(string userId, string teamId)
+    {
+        try
+        {
+            var query = $"?namespace=Team&object={teamId}&subject_id={userId}";
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_ketoUrl}/relation-tuples{query}");
+            var response = await _client.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return PermissionError.InternalError;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<RelationTupleResponse>(content);
+
+            if (result is null || result.RelationTuples.Count == 0)
+            {
+                return TeamMemberRole.None;
+            }
+
+            var relation = result.RelationTuples[0].Relation;
+            return TeamMemberRoleExtensions.FromString(relation);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error getting role for user in team");
+            return PermissionError.InternalError;
+        }
+    }
 }

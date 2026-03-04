@@ -1,4 +1,6 @@
-﻿namespace competitions.Infrastructure.Entities;
+using competitions.Domain.Models;
+
+namespace competitions.Infrastructure.Entities;
 
 public class LeagueTeamEntity
 {
@@ -8,4 +10,5 @@ public class LeagueTeamEntity
     public LeagueEntity League { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required string TenantId { get; set; }
+    public RegistrationStatus Status { get; set; } = RegistrationStatus.Pending;
 }

@@ -13,6 +13,7 @@ public sealed class DatabaseService : DbContext
     public DbSet<DivisionGroupStandingsEntity> Standings => Set<DivisionGroupStandingsEntity>();
     public DbSet<DivisionGroupStandingsEntryEntity> StandingsEntities => Set<DivisionGroupStandingsEntryEntity>();
     public DbSet<LeagueTeamEntity> LeagueTeams => Set<LeagueTeamEntity>();
+    public DbSet<DivisionGroupTeamEntity> DivisionGroupTeams => Set<DivisionGroupTeamEntity>();
     public DbSet<RosterEntity> Rosters => Set<RosterEntity>();
     public DbSet<MatchEntity> Matches => Set<MatchEntity>();
     
