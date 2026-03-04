@@ -29,4 +29,9 @@
       <Folder Include="Domain\Competitions\Tournaments\Models\RoundRobin\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="competitions.Tests\**\*.cs" />
+      <Compile Remove="competitions.Tests/**/*.cs" />
+    </ItemGroup>
+
 </Project>
