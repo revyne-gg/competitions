@@ -31,6 +31,10 @@ public class LeaguesService(
             Description = request.Description,
             RealmId = request.RealmId,
             TenantId = request.TenantId,
+            RegistrationPeriodStart = request.RegistrationPeriodStart?.ToDateTime(),
+            RegistrationPeriodEnd   = request.RegistrationPeriodEnd?.ToDateTime(),
+            LeaguePeriodStart       = request.LeaguePeriodStart?.ToDateTime(),
+            LeaguePeriodEnd         = request.LeaguePeriodEnd?.ToDateTime(),
         };
 
         var res = await createLeagueUseCase.Execute(

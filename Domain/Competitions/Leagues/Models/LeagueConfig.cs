@@ -4,5 +4,8 @@ namespace competitions.Domain.Competitions.Leagues.Models;
 
 public class LeagueConfig : CompetitionConfig
 {
-    // TODO: Add number of divisions etc
+    public DateTime? RegistrationPeriodStart { get; set; }
+    public DateTime? RegistrationPeriodEnd { get; set; }
+    public DateTime? LeaguePeriodStart { get; set; }
+    public DateTime? LeaguePeriodEnd { get; set; }
 }

@@ -78,6 +78,10 @@ public sealed class CreateLeagueUseCase(
             RealmId = realmId,
             OrganiserId = organiserId,
             TenantId = tenantId,
+            RegistrationPeriodStart = config.RegistrationPeriodStart,
+            RegistrationPeriodEnd   = config.RegistrationPeriodEnd,
+            LeaguePeriodStart       = config.LeaguePeriodStart,
+            LeaguePeriodEnd         = config.LeaguePeriodEnd,
         };
 
         await repo.AddAsync(league);
