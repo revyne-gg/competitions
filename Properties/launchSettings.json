@@ -10,7 +10,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "KETO_URL": "http://localhost:4466",
         "KETO_ADMIN_URL": "http://localhost:4467",
-        "NATS_URL": "nats://localhost:4222"
+        "NATS_URL": "nats://localhost:4222",
+        "DATABASE_URL": "Host=127.0.0.1;Port=5432;Database=competitions;Username=brackzr;Password=secret"
       }
     },
     "https": {

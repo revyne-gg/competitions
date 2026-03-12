@@ -3,16 +3,22 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 LABEL service="competitions"
 USER $APP_UID
 WORKDIR /app
-EXPOSE 3050
+EXPOSE 8080
 
 # 2. Build stage - Use --platform=$BUILDPLATFORM to run SDK natively on the runner
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG TARGETARCH
 ARG BUILD_CONFIGURATION=Release
+ARG GITLAB_TOKEN
 WORKDIR /src
 
-# Copy and restore specifically for the target architecture (-a $TARGETARCH)
-COPY ["competitions.csproj", "./"]
+# Copy project file + NuGet config, authenticate, then restore
+# (nuget.config defines the gitlab source URL; we inject credentials here)
+COPY ["competitions.csproj", "nuget.config", "./"]
+RUN dotnet nuget update source gitlab \
+        --username gitlab-ci-token \
+        --password "$GITLAB_TOKEN" \
+        --store-password-in-clear-text
 RUN dotnet restore "competitions.csproj" -a $TARGETARCH
 
 # Copy the rest of the source
