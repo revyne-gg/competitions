@@ -17,6 +17,8 @@ public class Match
     public string? WinnerTeamId { get; set; }
     public string? LoserTeamId { get; set; }
 
+    public int? Round { get; set; }
+
     public string TenantId { get; set; }
     public string CompetitionId { get; set; }
     public Competition? Competition { get; set; }

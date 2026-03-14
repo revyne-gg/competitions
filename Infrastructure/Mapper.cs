@@ -150,6 +150,7 @@ internal static class Mapper
                 ScoreAway = entity.ScoreAway,
                 WinnerTeamId = entity.WinnerTeamId,
                 LoserTeamId = entity.LoserTeamId,
+                Round = entity.Round,
                 MatchDate = entity.MatchDate,
                 CreatedAt = entity.CreatedAt,
                 TenantId = entity.TenantId,

@@ -65,6 +65,9 @@ builder.Services.AddScoped<AddTeamToLeagueUseCase>();
 builder.Services.AddScoped<RegisterTeamForLeagueUseCase>();
 builder.Services.AddScoped<UnregisterTeamFromLeagueUseCase>();
 builder.Services.AddScoped<ReportMatchScoreUseCase>();
+builder.Services.AddScoped<CreateMatchesForLeagueUseCase>();
+builder.Services.AddScoped<CreateMatchesForTournamentUseCase>();
+builder.Services.AddScoped<CreateNextRoundForTournamentUseCase>();
 
 var app = builder.Build();
 
