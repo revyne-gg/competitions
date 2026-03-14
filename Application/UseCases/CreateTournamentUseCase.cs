@@ -21,6 +21,9 @@ public sealed class CreateTournamentUseCase(
         string tenantId
     )
     {
+        if (config.Format is not (TournamentFormat.SingleElimination or TournamentFormat.DoubleElimination))
+            return AppError.BadRequest;
+
         var role = await permissionService.GetRoleForUserInOrganiser(userId, organiserId);
         if (role.IsFailure)
         {

@@ -31,6 +31,7 @@ public class LeaguesService(
             Description = request.Description,
             RealmId = request.RealmId,
             TenantId = request.TenantId,
+            Legs = request.Legs.ToDomain(),
             RegistrationPeriodStart = request.RegistrationPeriodStart?.ToDateTime(),
             RegistrationPeriodEnd   = request.RegistrationPeriodEnd?.ToDateTime(),
             LeaguePeriodStart       = request.LeaguePeriodStart?.ToDateTime(),
@@ -72,6 +73,7 @@ public class LeaguesService(
         if (request.HasName) league.Name = request.Name;
         if (request.HasDescription) league.Description = request.Description;
         if (request.HasState) league.State = request.State.ToDomain();
+        if (request.HasLegs) league.Legs = request.Legs.ToDomain();
         if (request.RegistrationPeriodStart != null) league.RegistrationPeriodStart = request.RegistrationPeriodStart.ToDateTime();
         if (request.RegistrationPeriodEnd != null) league.RegistrationPeriodEnd = request.RegistrationPeriodEnd.ToDateTime();
         if (request.LeaguePeriodStart != null) league.LeaguePeriodStart = request.LeaguePeriodStart.ToDateTime();

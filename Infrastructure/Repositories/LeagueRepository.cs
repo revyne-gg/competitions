@@ -91,6 +91,7 @@ public class LeagueRepository(IDbContextFactory<DatabaseService> dbFactory) : IL
                 OrganiserId = league.OrganiserId,
                 RealmId = league.RealmId,
                 State = league.State,
+                Legs = league.Legs,
                 IsRegistrationOpen = league.IsRegistrationOpen,
                 RegistrationPeriodStart = league.RegistrationPeriodStart,
                 RegistrationPeriodEnd = league.RegistrationPeriodEnd,
@@ -135,6 +136,7 @@ public class LeagueRepository(IDbContextFactory<DatabaseService> dbFactory) : IL
                 config.OrganiserId = league.OrganiserId;
                 config.RealmId = league.RealmId;
                 config.State = league.State;
+                config.Legs = league.Legs;
                 config.IsRegistrationOpen = league.IsRegistrationOpen;
                 config.RegistrationPeriodStart = league.RegistrationPeriodStart;
                 config.RegistrationPeriodEnd = league.RegistrationPeriodEnd;

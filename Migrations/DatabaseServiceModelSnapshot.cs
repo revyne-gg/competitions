@@ -152,6 +152,10 @@ namespace competitions.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Legs")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompetitionId");

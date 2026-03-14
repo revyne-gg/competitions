@@ -53,6 +53,7 @@ internal static class Mapper
                 league.OrganiserId = config.OrganiserId;
                 league.RealmId = config.RealmId;
                 league.State = config.State;
+                league.Legs = config.Legs;
                 league.IsRegistrationOpen = config.IsRegistrationOpen;
                 league.RegistrationPeriodStart = config.RegistrationPeriodStart;
                 league.RegistrationPeriodEnd = config.RegistrationPeriodEnd;

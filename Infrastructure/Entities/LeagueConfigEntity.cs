@@ -1,4 +1,5 @@
 using competitions.Domain.Models;
+using competitions.Domain.Competitions.Leagues.Models;
 
 namespace competitions.Infrastructure.Entities;
 
@@ -13,6 +14,7 @@ public class LeagueConfigEntity
     public string RealmId { get; set; }
     public string RealmSlug { get; set; }
     public LeagueStatus State { get; set; } = LeagueStatus.Hidden;
+    public LeagueLegs Legs { get; set; } = LeagueLegs.OneLeg;
     public bool IsRegistrationOpen { get; set; }
     public DateTime? RegistrationPeriodStart { get; set; }
     public DateTime? RegistrationPeriodEnd { get; set; }

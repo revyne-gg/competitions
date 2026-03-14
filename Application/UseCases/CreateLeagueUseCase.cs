@@ -78,6 +78,7 @@ public sealed class CreateLeagueUseCase(
             RealmId = realmId,
             OrganiserId = organiserId,
             TenantId = tenantId,
+            Legs = config.Legs,
             RegistrationPeriodStart = config.RegistrationPeriodStart,
             RegistrationPeriodEnd   = config.RegistrationPeriodEnd,
             LeaguePeriodStart       = config.LeaguePeriodStart,

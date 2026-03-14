@@ -8,6 +8,7 @@ public class League : Competition
     public override CompetitionType Type => CompetitionType.League;
 
     public LeagueStatus State { get; set; } = LeagueStatus.Hidden;
+    public LeagueLegs Legs { get; set; } = LeagueLegs.OneLeg;
     public bool IsRegistrationOpen { get; set; }
     public DateTime? RegistrationPeriodStart { get; set; }
     public DateTime? RegistrationPeriodEnd { get; set; }

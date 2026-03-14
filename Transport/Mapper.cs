@@ -1,5 +1,6 @@
 ﻿using competitions.Application;
 using competitions.Domain.Models;
+using competitions.Domain.Competitions.Leagues.Models;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Revyne.Services.Competitions.V1;
@@ -7,9 +8,11 @@ using GrpcLeague = Revyne.Services.Competitions.V1.League;
 using GrpcDivision = Revyne.Services.Competitions.V1.Division;
 using GrpcDivisionGroup = Revyne.Services.Competitions.V1.DivisionGroup;
 using GrpcLeagueStatus = Revyne.Services.Competitions.V1.LeagueStatus;
+using GrpcLeagueLegs = Revyne.Services.Competitions.V1.LeagueLegs;
 using GrpcRegistrationStatus = Revyne.Services.Competitions.V1.RegistrationStatus;
 using DomainLeague = competitions.Domain.Models.League;
 using DomainLeagueStatus = competitions.Domain.Models.LeagueStatus;
+using DomainLeagueLegs = competitions.Domain.Competitions.Leagues.Models.LeagueLegs;
 using DomainDivision = competitions.Domain.Models.Division;
 using DomainDivisionGroup = competitions.Domain.Models.DivisionGroup;
 using DomainRegistrationStatus = competitions.Domain.Models.RegistrationStatus;
@@ -104,6 +107,7 @@ internal static class Mapper
                 OrganiserId = league.OrganiserId ?? string.Empty,
                 RealmId = league.RealmId ?? string.Empty,
                 State = league.State.ToGrpc(),
+                Legs = league.Legs.ToGrpc(),
                 CreatedAt = league.CreatedAt.ToTimestamp(),
             };
             if (league.RegistrationPeriodStart.HasValue)
@@ -126,6 +130,15 @@ internal static class Mapper
             DomainLeagueStatus.Live     => GrpcLeagueStatus.Live,
             DomainLeagueStatus.Finished => GrpcLeagueStatus.Finished,
             _                           => GrpcLeagueStatus.Hidden,
+        };
+    }
+
+    extension(DomainLeagueLegs legs)
+    {
+        internal GrpcLeagueLegs ToGrpc() => legs switch
+        {
+            DomainLeagueLegs.TwoLegs => GrpcLeagueLegs.TwoLegs,
+            _                        => GrpcLeagueLegs.OneLeg,
         };
     }
 
@@ -208,6 +221,15 @@ internal static class GrpcInputMapper
             GrpcLeagueStatus.Live     => DomainLeagueStatus.Live,
             GrpcLeagueStatus.Finished => DomainLeagueStatus.Finished,
             _                         => DomainLeagueStatus.Hidden,
+        };
+    }
+
+    extension(GrpcLeagueLegs legs)
+    {
+        internal DomainLeagueLegs ToDomain() => legs switch
+        {
+            GrpcLeagueLegs.TwoLegs => DomainLeagueLegs.TwoLegs,
+            _                      => DomainLeagueLegs.OneLeg,
         };
     }
 }
