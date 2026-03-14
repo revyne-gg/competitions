@@ -90,7 +90,7 @@ docker_push_latest:
     - echo "$CI_JOB_TOKEN" | docker login registry.gitlab.com -u gitlab-ci-token --password-stdin
 
     - docker buildx create --use
-    - docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_NAME:latest -t $IMAGE_NAME:$CI_COMMIT_SHA --push .
+    - docker buildx build --platform linux/amd64,linux/arm64 --build-arg -t $IMAGE_NAME:latest -t $IMAGE_NAME:$CI_COMMIT_SHA --push .
   only:
     - main
   needs:
@@ -108,7 +108,7 @@ docker_push_tag:
     - export VERSION_TAG=$CI_COMMIT_REF_NAME
 
     - docker buildx create --use
-    - docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_NAME:$VERSION_TAG --push .
+    - docker buildx build --platform linux/amd64,linux/arm64 --build-arg -t $IMAGE_NAME:$VERSION_TAG --push .
   only:
     - tags
   needs:
