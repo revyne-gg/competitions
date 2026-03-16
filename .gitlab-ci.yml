@@ -22,8 +22,6 @@ variables:
 
 build:
   stage: build
-  tags:
-    - dotnet
   image: mcr.microsoft.com/dotnet/sdk:10.0
   script:
     - dotnet nuget update source gitlab
@@ -50,8 +48,6 @@ sast:
 
 test:
   stage: test
-  tags:
-    - dotnet
   image: mcr.microsoft.com/dotnet/sdk:10.0
   script:
     - echo "Running tests..."
@@ -61,8 +57,6 @@ test:
 
 run-migrations:
   stage: migrate
-  tags:
-    - dotnet
   image: mcr.microsoft.com/dotnet/sdk:10.0
   script:
     - echo "Running migrations for $CI_PROJECT_NAME..."
@@ -83,9 +77,9 @@ run-migrations:
 
 docker_push_latest:
   stage: publish
-  tags:
-    - dotnet
   image: docker:27
+  services:
+    - docker:27-dind
   script:
     - echo "$CI_JOB_TOKEN" | docker login registry.gitlab.com -u gitlab-ci-token --password-stdin
 
@@ -99,9 +93,9 @@ docker_push_latest:
 
 docker_push_tag:
   stage: publish
-  tags:
-    - dotnet
   image: docker:27
+  services:
+    - docker:27-dind
   script:
     - echo "$CI_JOB_TOKEN" | docker login registry.gitlab.com -u gitlab-ci-token --password-stdin
 
