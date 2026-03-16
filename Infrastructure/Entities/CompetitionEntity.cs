@@ -10,4 +10,7 @@ public class CompetitionEntity
     public CompetitionType Type { get; set; }
     public DateTime CreatedAt { get; set; }
     public string TenantId { get; set; }
+    public string Game { get; set; }
+    public int BestOf { get; set; } = 1;
+    public List<string>? MapPool { get; set; }
 }

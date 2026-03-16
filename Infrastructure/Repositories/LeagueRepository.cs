@@ -26,7 +26,7 @@ public class LeagueRepository(IDbContextFactory<DatabaseService> dbFactory) : IL
             var config = await db.LeagueConfigs
                 .FirstOrDefaultAsync(x => x.CompetitionId == id && x.TenantId == tenantId);
 
-            return competition.ToLeagueDomain();
+            return competition.ToLeagueDomain(config);
         }
         catch (Exception e)
         {
@@ -60,7 +60,7 @@ public class LeagueRepository(IDbContextFactory<DatabaseService> dbFactory) : IL
             var config = await db.LeagueConfigs
                 .FirstOrDefaultAsync(x => x.CompetitionId == competition.Id && x.TenantId == tenantId);
 
-            return competition.ToLeagueDomain();
+            return competition.ToLeagueDomain(config);
         }
         catch (Exception e)
         {
@@ -82,6 +82,9 @@ public class LeagueRepository(IDbContextFactory<DatabaseService> dbFactory) : IL
                 Type = CompetitionType.League,
                 CreatedAt = league.CreatedAt,
                 TenantId = league.TenantId,
+                Game = league.Game,
+                BestOf = league.BestOf,
+                MapPool = league.MapPool,
             };
 
             var configEntity = new LeagueConfigEntity
@@ -126,6 +129,9 @@ public class LeagueRepository(IDbContextFactory<DatabaseService> dbFactory) : IL
             if (entity is null) return RepositoryError.DatabaseConcurrencyError;
 
             entity.Name = league.Name;
+            entity.Game = league.Game;
+            entity.BestOf = league.BestOf;
+            entity.MapPool = league.MapPool;
 
             var config = await db.LeagueConfigs
                 .FirstOrDefaultAsync(x => x.CompetitionId == league.Id && x.TenantId == league.TenantId);

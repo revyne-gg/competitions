@@ -12,13 +12,19 @@ ARG BUILD_CONFIGURATION=Release
 ARG GITLAB_TOKEN
 WORKDIR /src
 
-# Copy project file + NuGet config, authenticate, then restore
+# Copy project file + NuGet config + local packages, authenticate, then restore
 # (nuget.config defines the gitlab source URL; we inject credentials here)
 COPY ["competitions.csproj", "nuget.config", "./"]
-RUN dotnet nuget update source gitlab \
-        --username gitlab-ci-token \
-        --password "$GITLAB_TOKEN" \
-        --store-password-in-clear-text
+COPY ["local-packages/", "./local-packages/"]
+RUN if [ -n "$GITLAB_TOKEN" ]; then \
+        dotnet nuget update source gitlab \
+            --username gitlab-ci-token \
+            --password "$GITLAB_TOKEN" \
+            --store-password-in-clear-text; \
+    else \
+        dotnet nuget disable source gitlab; \
+    fi \
+    && dotnet nuget disable source local-proto 2>/dev/null || true
 RUN dotnet restore "competitions.csproj" -a $TARGETARCH
 
 # Copy the rest of the source

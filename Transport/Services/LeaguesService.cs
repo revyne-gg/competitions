@@ -32,6 +32,9 @@ public class LeaguesService(
             RealmId = request.RealmId,
             TenantId = request.TenantId,
             Legs = request.Legs.ToDomain(),
+            Game = request.Game,
+            BestOf = request.BestOf,
+            MapPool = request.MapPool.Count > 0 ? request.MapPool.ToList() : null,
             RegistrationPeriodStart = request.RegistrationPeriodStart?.ToDateTime(),
             RegistrationPeriodEnd   = request.RegistrationPeriodEnd?.ToDateTime(),
             LeaguePeriodStart       = request.LeaguePeriodStart?.ToDateTime(),
@@ -74,6 +77,9 @@ public class LeaguesService(
         if (request.HasDescription) league.Description = request.Description;
         if (request.HasState) league.State = request.State.ToDomain();
         if (request.HasLegs) league.Legs = request.Legs.ToDomain();
+        if (request.HasGame) league.Game = request.Game;
+        if (request.HasBestOf) league.BestOf = request.BestOf;
+        if (request.HasMapPool) league.MapPool = request.MapPool.Count > 0 ? request.MapPool.ToList() : null;
         if (request.RegistrationPeriodStart != null) league.RegistrationPeriodStart = request.RegistrationPeriodStart.ToDateTime();
         if (request.RegistrationPeriodEnd != null) league.RegistrationPeriodEnd = request.RegistrationPeriodEnd.ToDateTime();
         if (request.LeaguePeriodStart != null) league.LeaguePeriodStart = request.LeaguePeriodStart.ToDateTime();

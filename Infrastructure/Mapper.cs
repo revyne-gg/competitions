@@ -13,6 +13,8 @@ internal static class Mapper
         return new TournamentConfig
         {
             Format = entity.Format,
+            SeedingType = entity.SeedingType,
+            BracketReset = entity.BracketReset,
         };
     }
 
@@ -32,7 +34,12 @@ internal static class Mapper
                 Discriminator = entity.Discriminator,
                 CreatedAt = entity.CreatedAt,
                 TenantId = entity.TenantId,
+                Game = entity.Game,
+                BestOf = entity.BestOf,
+                MapPool = entity.MapPool,
                 Format = config?.Format ?? default,
+                SeedingType = config?.SeedingType ?? default,
+                BracketReset = config?.BracketReset ?? false,
             };
         }
 
@@ -45,6 +52,9 @@ internal static class Mapper
                 Discriminator = entity.Discriminator,
                 CreatedAt = entity.CreatedAt,
                 TenantId = entity.TenantId,
+                Game = entity.Game,
+                BestOf = entity.BestOf,
+                MapPool = entity.MapPool,
             };
 
             if (config is not null)

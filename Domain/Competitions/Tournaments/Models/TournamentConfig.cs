@@ -5,4 +5,6 @@ namespace competitions.Domain.Competitions.Tournaments.Models;
 public class TournamentConfig : CompetitionConfig
 {
     public TournamentFormat Format { get; set; }
+    public SeedingType SeedingType { get; set; } = SeedingType.Standard;
+    public bool BracketReset { get; set; }
 }

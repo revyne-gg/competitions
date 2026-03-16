@@ -21,9 +21,6 @@ public sealed class CreateTournamentUseCase(
         string tenantId
     )
     {
-        if (config.Format is not (TournamentFormat.SingleElimination or TournamentFormat.DoubleElimination))
-            return AppError.BadRequest;
-
         var role = await permissionService.GetRoleForUserInOrganiser(userId, organiserId);
         if (role.IsFailure)
         {
@@ -78,10 +75,15 @@ public sealed class CreateTournamentUseCase(
             Id = $"tournament_{tournamentId}",
             Name = config.Name,
             Format = config.Format,
+            SeedingType = config.SeedingType,
+            BracketReset = config.BracketReset,
             Discriminator = discriminator,
             Description = config.Description,
             CreatedAt = DateTime.UtcNow,
             TenantId = tenantId,
+            Game = config.Game,
+            BestOf = config.BestOf,
+            MapPool = config.MapPool,
         };
 
         var result = await repo.AddAsync(tournament);

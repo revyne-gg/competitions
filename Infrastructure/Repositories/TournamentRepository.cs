@@ -84,12 +84,17 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
                 Type = CompetitionType.Tournament,
                 CreatedAt = tournament.CreatedAt,
                 TenantId = tournament.TenantId,
+                Game = tournament.Game,
+                BestOf = tournament.BestOf,
+                MapPool = tournament.MapPool,
             };
 
             var configEntity = new TournamentConfigEntity
             {
                 CompetitionId = tournament.Id,
                 Format = tournament.Format,
+                SeedingType = tournament.SeedingType,
+                BracketReset = tournament.BracketReset,
                 TenantId = tournament.TenantId,
             };
 
@@ -118,6 +123,9 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
 
             entity.Name = tournament.Name;
             entity.Discriminator = tournament.Discriminator;
+            entity.Game = tournament.Game;
+            entity.BestOf = tournament.BestOf;
+            entity.MapPool = tournament.MapPool;
 
             var config = await db.TournamentConfigs
                 .FirstOrDefaultAsync(x => x.CompetitionId == tournament.Id && x.TenantId == tournament.TenantId);
@@ -125,6 +133,8 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
             if (config is not null)
             {
                 config.Format = tournament.Format;
+                config.SeedingType = tournament.SeedingType;
+                config.BracketReset = tournament.BracketReset;
             }
 
             await db.SaveChangesAsync();

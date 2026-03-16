@@ -10,9 +10,11 @@ using GrpcDivisionGroup = Revyne.Services.Competitions.V1.DivisionGroup;
 using GrpcLeagueStatus = Revyne.Services.Competitions.V1.LeagueStatus;
 using GrpcLeagueLegs = Revyne.Services.Competitions.V1.LeagueLegs;
 using GrpcRegistrationStatus = Revyne.Services.Competitions.V1.RegistrationStatus;
+using GrpcSeedingType = Revyne.Services.Competitions.V1.SeedingType;
 using DomainLeague = competitions.Domain.Models.League;
 using DomainLeagueStatus = competitions.Domain.Models.LeagueStatus;
 using DomainLeagueLegs = competitions.Domain.Competitions.Leagues.Models.LeagueLegs;
+using DomainSeedingType = competitions.Domain.Competitions.Tournaments.Models.SeedingType;
 using DomainDivision = competitions.Domain.Models.Division;
 using DomainDivisionGroup = competitions.Domain.Models.DivisionGroup;
 using DomainRegistrationStatus = competitions.Domain.Models.RegistrationStatus;
@@ -80,15 +82,22 @@ internal static class Mapper
     {
         internal Tournament ToGrpc()
         {
-            return new Tournament
+            var grpc = new Tournament
             {
                 Id = tournament.Id,
                 Discriminator = tournament.Discriminator,
                 Name = tournament.Name,
-                Description = tournament.Description,
+                Description = tournament.Description ?? string.Empty,
                 Format = tournament.Format.ToGrpc(),
-                CreatedAt = tournament.CreatedAt.ToTimestamp()
+                CreatedAt = tournament.CreatedAt.ToTimestamp(),
+                Game = tournament.Game ?? string.Empty,
+                BestOf = tournament.BestOf,
+                SeedingType = tournament.SeedingType.ToGrpc(),
+                BracketReset = tournament.BracketReset,
             };
+            if (tournament.MapPool is not null)
+                grpc.MapPool.AddRange(tournament.MapPool);
+            return grpc;
         }
     }
 
@@ -109,7 +118,11 @@ internal static class Mapper
                 State = league.State.ToGrpc(),
                 Legs = league.Legs.ToGrpc(),
                 CreatedAt = league.CreatedAt.ToTimestamp(),
+                Game = league.Game ?? string.Empty,
+                BestOf = league.BestOf,
             };
+            if (league.MapPool is not null)
+                grpc.MapPool.AddRange(league.MapPool);
             if (league.RegistrationPeriodStart.HasValue)
                 grpc.RegistrationPeriodStart = league.RegistrationPeriodStart.Value.ToTimestamp();
             if (league.RegistrationPeriodEnd.HasValue)
@@ -139,6 +152,16 @@ internal static class Mapper
         {
             DomainLeagueLegs.TwoLegs => GrpcLeagueLegs.TwoLegs,
             _                        => GrpcLeagueLegs.OneLeg,
+        };
+    }
+
+    extension(DomainSeedingType seedingType)
+    {
+        internal GrpcSeedingType ToGrpc() => seedingType switch
+        {
+            DomainSeedingType.Random => GrpcSeedingType.Random,
+            DomainSeedingType.Manual => GrpcSeedingType.Manual,
+            _                       => GrpcSeedingType.Standard,
         };
     }
 
@@ -230,6 +253,16 @@ internal static class GrpcInputMapper
         {
             GrpcLeagueLegs.TwoLegs => DomainLeagueLegs.TwoLegs,
             _                      => DomainLeagueLegs.OneLeg,
+        };
+    }
+
+    extension(GrpcSeedingType seedingType)
+    {
+        internal DomainSeedingType ToDomain() => seedingType switch
+        {
+            GrpcSeedingType.Random => DomainSeedingType.Random,
+            GrpcSeedingType.Manual => DomainSeedingType.Manual,
+            _                     => DomainSeedingType.Standard,
         };
     }
 }

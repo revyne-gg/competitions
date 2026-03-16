@@ -7,4 +7,6 @@ public class Tournament : Competition
 {
     public override CompetitionType Type => CompetitionType.Tournament;
     public TournamentFormat Format { get; set; }
+    public SeedingType SeedingType { get; set; } = SeedingType.Standard;
+    public bool BracketReset { get; set; }
 }

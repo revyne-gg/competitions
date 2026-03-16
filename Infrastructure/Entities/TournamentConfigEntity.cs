@@ -8,5 +8,7 @@ public class TournamentConfigEntity
     public string CompetitionId { get; set; }
     public CompetitionEntity Competition { get; set; }
     public TournamentFormat Format { get; set; }
+    public SeedingType SeedingType { get; set; } = SeedingType.Standard;
+    public bool BracketReset { get; set; }
     public string TenantId { get; set; }
 }

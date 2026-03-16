@@ -17,6 +17,11 @@ public class CompetitionsService(
             Name = request.Name,
             Description = request.Description,
             Format = request.Format.ToDomain(),
+            Game = request.Game,
+            BestOf = request.BestOf,
+            MapPool = request.MapPool.Count > 0 ? request.MapPool.ToList() : null,
+            SeedingType = request.SeedingType.ToDomain(),
+            BracketReset = request.BracketReset,
         };
         
         var res = await createTournamentUseCase.Execute(
