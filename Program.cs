@@ -68,6 +68,11 @@ builder.Services.AddScoped<ReportMatchScoreUseCase>();
 builder.Services.AddScoped<CreateMatchesForLeagueUseCase>();
 builder.Services.AddScoped<CreateMatchesForTournamentUseCase>();
 builder.Services.AddScoped<CreateNextRoundForTournamentUseCase>();
+builder.Services.AddScoped<EditLeagueUseCase>();
+builder.Services.AddScoped<EditTournamentUseCase>();
+builder.Services.AddScoped<DeleteLeagueUseCase>();
+builder.Services.AddScoped<DeleteTournamentUseCase>();
+builder.Services.AddScoped<JoinLeagueUseCase>();
 
 var app = builder.Build();
 

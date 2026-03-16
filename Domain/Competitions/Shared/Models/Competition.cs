@@ -17,6 +17,7 @@ public abstract class Competition
     public string Game { get; set; }
     public int BestOf { get; set; } = 1;
     public List<string>? MapPool { get; set; }
+    public bool IsAutoAccept { get; set; }
 
     public bool IsDeleted { get; set; }
     public string? DeletedBy { get; set; }
