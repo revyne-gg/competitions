@@ -18,6 +18,7 @@ variables:
   IMAGE_NAME: registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
+  DOCKER_TLS_CERTDIR: "/certs"
 
 
 build:
