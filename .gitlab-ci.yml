@@ -66,11 +66,11 @@ run-migrations:
   image: mcr.microsoft.com/dotnet/sdk:10.0
   script:
     - echo "Running migrations for $CI_PROJECT_NAME..."
-    - dotnet tool restore
     - dotnet nuget update source gitlab
         --username gitlab-ci-token
         --password $CI_JOB_TOKEN
         --store-password-in-clear-text
+    - dotnet tool restore
     - dotnet restore competitions.csproj
     - export DATABASE_URL=$DATABASE_URL
     - dotnet build competitions.csproj -c Release --no-restore
