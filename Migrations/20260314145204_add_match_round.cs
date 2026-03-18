@@ -19,15 +19,6 @@ namespace competitions.Migrations
                 nullable: false,
                 defaultValue: 0);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Legs",
-                table: "LeagueConfigs",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldDefaultValue: 1);
-
             migrationBuilder.AddColumn<bool>(
                 name: "IsRegistrationOpen",
                 table: "LeagueConfigs",
@@ -353,15 +344,6 @@ namespace competitions.Migrations
             migrationBuilder.DropColumn(
                 name: "TenantId",
                 table: "DivisionGroups");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Legs",
-                table: "LeagueConfigs",
-                type: "integer",
-                nullable: false,
-                defaultValue: 1,
-                oldClrType: typeof(int),
-                oldType: "integer");
 
             migrationBuilder.AlterColumn<long>(
                 name: "Id",
