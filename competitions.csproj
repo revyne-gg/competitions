@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="gg.revyne.Contracts" Version="0.6.0"/>
-        <PackageReference Include="Grpc.AspNetCore" Version="2.64.0"/>
+        <PackageReference Include="gg.revyne.Contracts" Version="0.7.0" />
+        <PackageReference Include="Grpc.AspNetCore" Version="2.64.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="10.0.1" />
