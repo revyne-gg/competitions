@@ -57,14 +57,8 @@ namespace competitions.Migrations
                 nullable: false,
                 defaultValue: 0);
 
-            migrationBuilder.AlterColumn<string>(
-                name: "Id",
-                table: "Divisions",
-                type: "text",
-                nullable: false,
-                oldClrType: typeof(long),
-                oldType: "bigint")
-                .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+            migrationBuilder.Sql(@"ALTER TABLE ""Divisions"" ALTER COLUMN ""Id"" DROP IDENTITY IF EXISTS;");
+            migrationBuilder.Sql(@"ALTER TABLE ""Divisions"" ALTER COLUMN ""Id"" TYPE text USING ""Id""::text;");
 
             migrationBuilder.AddColumn<int>(
                 name: "BestOf",
@@ -115,14 +109,8 @@ namespace competitions.Migrations
                 nullable: false,
                 defaultValue: "");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "Id",
-                table: "DivisionGroups",
-                type: "text",
-                nullable: false,
-                oldClrType: typeof(long),
-                oldType: "bigint")
-                .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+            migrationBuilder.Sql(@"ALTER TABLE ""DivisionGroups"" ALTER COLUMN ""Id"" DROP IDENTITY IF EXISTS;");
+            migrationBuilder.Sql(@"ALTER TABLE ""DivisionGroups"" ALTER COLUMN ""Id"" TYPE text USING ""Id""::text;");
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "CreatedAt",
