@@ -18,7 +18,8 @@ public class LeaguesService(
     AddTeamToLeagueUseCase addTeamToDivisionGroupUseCase,
     RegisterTeamForLeagueUseCase registerTeamUseCase,
     UnregisterTeamFromLeagueUseCase unregisterTeamUseCase,
-    competitions.Application.Ports.ILeagueRepository leagueRepo
+    competitions.Application.Ports.ILeagueRepository leagueRepo,
+    competitions.Application.Ports.ITournamentRepository tournamentRepo
 ) : Revyne.Services.Competitions.V1.LeaguesService.LeaguesServiceBase
 {
     // ── League ─────────────────────────────────────────────────────────────────
@@ -106,6 +107,54 @@ public class LeaguesService(
         if (updateRes.IsFailure) throw new RpcException(new Status(StatusCode.Internal, "Internal error."));
 
         return new Empty();
+    }
+
+    // ── Unified listing ───────────────────────────────────────────────────────
+
+    public override async Task<PaginatedCompetitionSummaries> GetCompetitionsByRealm(
+        GetCompetitionsByRealmRequest request, ServerCallContext context)
+    {
+        var response = new PaginatedCompetitionSummaries
+        {
+            Pagination = new PaginationMeta { Page = 1, TotalPages = 1, HasNextPage = false, HasPreviousPage = false }
+        };
+
+        var typeFilter = request.Type?.ToLower();
+
+        if (string.IsNullOrEmpty(typeFilter) || typeFilter == "league")
+        {
+            var leaguesRes = await leagueRepo.GetByRealmIdAsync(request.RealmId, request.TenantId);
+            if (leaguesRes.IsSuccess)
+            {
+                response.Items.AddRange(leaguesRes.Value!.Select(l => new CompetitionSummary
+                {
+                    Id = l.Id,
+                    Name = l.Name,
+                    Discriminator = l.Discriminator,
+                    Type = "league",
+                    State = l.State.ToGrpc().ToString().ToLower(),
+                    CreatedAt = l.CreatedAt.ToTimestamp(),
+                }));
+            }
+        }
+
+        if (string.IsNullOrEmpty(typeFilter) || typeFilter == "tournament")
+        {
+            var tournamentsRes = await tournamentRepo.GetByRealmIdAsync(request.RealmId, request.TenantId);
+            if (tournamentsRes.IsSuccess)
+            {
+                response.Items.AddRange(tournamentsRes.Value!.Select(t => new CompetitionSummary
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Discriminator = t.Discriminator,
+                    Type = "tournament",
+                    CreatedAt = t.CreatedAt.ToTimestamp(),
+                }));
+            }
+        }
+
+        return response;
     }
 
     // ── Divisions ──────────────────────────────────────────────────────────────

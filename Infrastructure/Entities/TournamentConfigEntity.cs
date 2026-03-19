@@ -10,5 +10,7 @@ public class TournamentConfigEntity
     public TournamentFormat Format { get; set; }
     public SeedingType SeedingType { get; set; } = SeedingType.Standard;
     public bool BracketReset { get; set; }
+    public string? OrganiserId { get; set; }
+    public string? RealmId { get; set; }
     public string TenantId { get; set; }
 }

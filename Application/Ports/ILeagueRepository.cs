@@ -7,6 +7,7 @@ public interface ILeagueRepository
 {
     // Leagues
     Task<Result<League, RepositoryError>> GetByIdAsync(string id, string tenantId);
+    Task<Result<List<League>, RepositoryError>> GetByRealmIdAsync(string realmId, string tenantId);
     Task<Result<League, RepositoryError>> GetByNameAndDiscriminatorAsync(string name, string discriminator, string tenantId);
     Task<Result<Unit, RepositoryError>> AddAsync(League league);
     Task<Result<Unit, RepositoryError>> Update(League league);

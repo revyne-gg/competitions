@@ -81,6 +81,8 @@ public sealed class CreateTournamentUseCase(
             Description = config.Description,
             CreatedAt = DateTime.UtcNow,
             TenantId = tenantId,
+            OrganiserId = organiserId,
+            RealmId = realmId,
             Game = config.Game,
             BestOf = config.BestOf,
             MapPool = config.MapPool,

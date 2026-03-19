@@ -68,6 +68,32 @@ public class LeagueRepository(IDbContextFactory<DatabaseService> dbFactory) : IL
         }
     }
 
+    public async Task<Result<List<League>, RepositoryError>> GetByRealmIdAsync(string realmId, string tenantId)
+    {
+        try
+        {
+            var db = await dbFactory.CreateDbContextAsync();
+            var configs = await db.LeagueConfigs
+                .Where(x => x.RealmId == realmId && x.TenantId == tenantId && x.DeletedAt == null)
+                .ToListAsync();
+
+            var competitionIds = configs.Select(c => c.CompetitionId).ToList();
+            var competitions = await db.Competitions
+                .Where(x => competitionIds.Contains(x.Id) && x.TenantId == tenantId)
+                .ToListAsync();
+
+            var leagues = new List<League>();
+            foreach (var config in configs)
+            {
+                var comp = competitions.FirstOrDefault(c => c.Id == config.CompetitionId);
+                if (comp is not null) leagues.Add(comp.ToLeagueDomain(config));
+            }
+
+            return leagues;
+        }
+        catch { return RepositoryError.DatabaseError; }
+    }
+
     public async Task<Result<Unit, RepositoryError>> AddAsync(League league)
     {
         try

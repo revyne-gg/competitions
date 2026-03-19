@@ -40,6 +40,8 @@ internal static class Mapper
                 Format = config?.Format ?? default,
                 SeedingType = config?.SeedingType ?? default,
                 BracketReset = config?.BracketReset ?? false,
+                OrganiserId = config?.OrganiserId,
+                RealmId = config?.RealmId,
             };
         }
 

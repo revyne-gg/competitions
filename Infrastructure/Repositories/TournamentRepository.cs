@@ -70,6 +70,32 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
         }
     }
 
+    public async Task<Result<List<Tournament>, RepositoryError>> GetByRealmIdAsync(string realmId, string tenantId)
+    {
+        try
+        {
+            var db = await dbFactory.CreateDbContextAsync();
+            var configs = await db.TournamentConfigs
+                .Where(x => x.RealmId == realmId && x.TenantId == tenantId)
+                .ToListAsync();
+
+            var competitionIds = configs.Select(c => c.CompetitionId).ToList();
+            var competitions = await db.Competitions
+                .Where(x => competitionIds.Contains(x.Id) && x.TenantId == tenantId)
+                .ToListAsync();
+
+            var tournaments = new List<Tournament>();
+            foreach (var config in configs)
+            {
+                var comp = competitions.FirstOrDefault(c => c.Id == config.CompetitionId);
+                if (comp is not null) tournaments.Add(comp.ToTournamentDomain(config));
+            }
+
+            return tournaments;
+        }
+        catch { return RepositoryError.DatabaseError; }
+    }
+
     public async Task<Result<Unit, RepositoryError>> AddAsync(Tournament tournament)
     {
         try
@@ -95,6 +121,8 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
                 Format = tournament.Format,
                 SeedingType = tournament.SeedingType,
                 BracketReset = tournament.BracketReset,
+                OrganiserId = tournament.OrganiserId,
+                RealmId = tournament.RealmId,
                 TenantId = tournament.TenantId,
             };
 
@@ -135,6 +163,8 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
                 config.Format = tournament.Format;
                 config.SeedingType = tournament.SeedingType;
                 config.BracketReset = tournament.BracketReset;
+                config.OrganiserId = tournament.OrganiserId;
+                config.RealmId = tournament.RealmId;
             }
 
             await db.SaveChangesAsync();

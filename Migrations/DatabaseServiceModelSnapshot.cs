@@ -473,6 +473,12 @@ namespace competitions.Migrations
                     b.Property<int>("Format")
                         .HasColumnType("integer");
 
+                    b.Property<string>("OrganiserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RealmId")
+                        .HasColumnType("text");
+
                     b.Property<int>("SeedingType")
                         .HasColumnType("integer");
 
