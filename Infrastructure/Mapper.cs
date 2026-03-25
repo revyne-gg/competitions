@@ -1,4 +1,5 @@
-﻿using competitions.Domain.Competitions.Leagues.Models;
+﻿using System.Text.Json;
+using competitions.Domain.Competitions.Leagues.Models;
 using competitions.Domain.Competitions.Shared.Models;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Domain.Models;
@@ -25,7 +26,7 @@ internal static class Mapper
 
     extension (CompetitionEntity entity)
     {
-        internal Tournament ToTournamentDomain(TournamentConfigEntity? config = null)
+        internal Tournament ToTournamentDomain(TournamentConfigEntity? config = null, List<TournamentStageEntity>? stageEntities = null)
         {
             return new Tournament
             {
@@ -40,8 +41,10 @@ internal static class Mapper
                 Format = config?.Format ?? default,
                 SeedingType = config?.SeedingType ?? default,
                 BracketReset = config?.BracketReset ?? false,
+                MaxParticipants = config?.MaxParticipants ?? 0,
                 OrganiserId = config?.OrganiserId,
                 RealmId = config?.RealmId,
+                Stages = stageEntities?.OrderBy(s => s.Order).Select(s => s.ToDomain()).ToList() ?? new(),
             };
         }
 
@@ -134,6 +137,42 @@ internal static class Mapper
                 CreatedAt = entity.CreatedAt,
                 Status = entity.Status,
             };
+        }
+    }
+
+    extension (TournamentStageEntity entity)
+    {
+        internal Stage ToDomain()
+        {
+            var stage = new Stage
+            {
+                Name = entity.Name,
+                Format = entity.Format,
+                Order = entity.Order,
+                Advancing = entity.Advancing,
+            };
+
+            if (!string.IsNullOrEmpty(entity.FormatConfigJson))
+            {
+                var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                switch (entity.Format)
+                {
+                    case TournamentFormat.SingleElimination:
+                        stage.SingleEliminationConfig = JsonSerializer.Deserialize<SingleEliminationStageConfig>(entity.FormatConfigJson, opts);
+                        break;
+                    case TournamentFormat.DoubleElimination:
+                        stage.DoubleEliminationConfig = JsonSerializer.Deserialize<DoubleEliminationStageConfig>(entity.FormatConfigJson, opts);
+                        break;
+                    case TournamentFormat.Swiss:
+                        stage.SwissConfig = JsonSerializer.Deserialize<SwissStageConfig>(entity.FormatConfigJson, opts);
+                        break;
+                    case TournamentFormat.RoundRobin:
+                        stage.RoundRobinConfig = JsonSerializer.Deserialize<RoundRobinStageConfig>(entity.FormatConfigJson, opts);
+                        break;
+                }
+            }
+
+            return stage;
         }
     }
 

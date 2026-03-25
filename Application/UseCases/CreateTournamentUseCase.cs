@@ -22,22 +22,12 @@ public sealed class CreateTournamentUseCase(
     )
     {
         var role = await permissionService.GetRoleForUserInOrganiser(userId, organiserId);
-        if (role.IsFailure)
-        {
-            return AppError.InternalError;
-        }
+        var hasPermission = role.IsSuccess && role.Value is OrganiserMemberRole.Owner or OrganiserMemberRole.Manager;
 
-        var hasPermission = role.Value is OrganiserMemberRole.Owner or OrganiserMemberRole.Manager;
-
-        if (hasPermission)
+        if (!hasPermission)
         {
             var realmRole = await permissionService.GetRoleForUserInRealm(userId, realmId);
-            if (realmRole.IsFailure)
-            {
-                return AppError.InternalError;
-            }
-
-            hasPermission = realmRole.Value is RealmMemberRole.Admin;
+            hasPermission = realmRole.IsSuccess && realmRole.Value is RealmMemberRole.Admin;
         }
 
         if (!hasPermission)
@@ -68,6 +58,32 @@ public sealed class CreateTournamentUseCase(
             }
         } while (exist);
         
+        // Validate stages
+        if (config.Stages.Count > 0)
+        {
+            for (int i = 0; i < config.Stages.Count; i++)
+            {
+                var stage = config.Stages[i];
+                var isLastStage = i == config.Stages.Count - 1;
+
+                // Last stage must not have advancing teams
+                if (isLastStage && stage.Advancing > 0)
+                    return AppError.BadRequest;
+
+                // Non-last stages must advance at least 2 teams
+                if (!isLastStage && stage.Advancing < 2)
+                    return AppError.BadRequest;
+
+                // Advancing teams cannot exceed max participants
+                if (config.MaxParticipants > 0 && stage.Advancing > config.MaxParticipants)
+                    return AppError.BadRequest;
+
+                // Each subsequent stage's participants can't exceed previous stage's advancing count
+                if (i > 0 && config.Stages[i - 1].Advancing > 0 && stage.Advancing > config.Stages[i - 1].Advancing)
+                    return AppError.BadRequest;
+            }
+        }
+
         var tournamentId = await idGenerator.Generate();
 
         var tournament = new Tournament
@@ -77,6 +93,7 @@ public sealed class CreateTournamentUseCase(
             Format = config.Format,
             SeedingType = config.SeedingType,
             BracketReset = config.BracketReset,
+            MaxParticipants = config.MaxParticipants,
             Discriminator = discriminator,
             Description = config.Description,
             CreatedAt = DateTime.UtcNow,
@@ -86,6 +103,17 @@ public sealed class CreateTournamentUseCase(
             Game = config.Game,
             BestOf = config.BestOf,
             MapPool = config.MapPool,
+            Stages = config.Stages.Select((s, idx) => new Stage
+            {
+                Name = s.Name,
+                Format = s.Format,
+                Order = idx,
+                Advancing = s.Advancing,
+                SingleEliminationConfig = s.SingleEliminationConfig,
+                DoubleEliminationConfig = s.DoubleEliminationConfig,
+                SwissConfig = s.SwissConfig,
+                RoundRobinConfig = s.RoundRobinConfig,
+            }).ToList(),
         };
 
         var result = await repo.AddAsync(tournament);

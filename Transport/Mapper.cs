@@ -11,10 +11,14 @@ using GrpcLeagueStatus = Revyne.Services.Competitions.V1.LeagueStatus;
 using GrpcLeagueLegs = Revyne.Services.Competitions.V1.LeagueLegs;
 using GrpcRegistrationStatus = Revyne.Services.Competitions.V1.RegistrationStatus;
 using GrpcSeedingType = Revyne.Services.Competitions.V1.SeedingType;
+using GrpcStage = Revyne.Services.Competitions.V1.TournamentStage;
+using GrpcStageRound = Revyne.Services.Competitions.V1.StageRound;
 using DomainLeague = competitions.Domain.Models.League;
 using DomainLeagueStatus = competitions.Domain.Models.LeagueStatus;
 using DomainLeagueLegs = competitions.Domain.Competitions.Leagues.Models.LeagueLegs;
 using DomainSeedingType = competitions.Domain.Competitions.Tournaments.Models.SeedingType;
+using DomainStage = competitions.Domain.Competitions.Tournaments.Models.Stage;
+using DomainStageRound = competitions.Domain.Competitions.Tournaments.Models.StageRound;
 using DomainDivision = competitions.Domain.Models.Division;
 using DomainDivisionGroup = competitions.Domain.Models.DivisionGroup;
 using DomainRegistrationStatus = competitions.Domain.Models.RegistrationStatus;
@@ -94,11 +98,59 @@ internal static class Mapper
                 BestOf = tournament.BestOf,
                 SeedingType = tournament.SeedingType.ToGrpc(),
                 BracketReset = tournament.BracketReset,
+                MaxParticipants = tournament.MaxParticipants,
             };
             if (tournament.MapPool is not null)
                 grpc.MapPool.AddRange(tournament.MapPool);
+            grpc.Stages.AddRange(tournament.Stages.Select(StageToGrpc));
             return grpc;
         }
+    }
+
+    internal static GrpcStage StageToGrpc(DomainStage stage)
+    {
+        var grpc = new GrpcStage
+        {
+            Name = stage.Name,
+            Format = stage.Format.ToGrpc(),
+            Order = stage.Order,
+            Advancing = stage.Advancing,
+        };
+
+        if (stage.SingleEliminationConfig is not null)
+        {
+            grpc.SingleEliminationConfig = new Revyne.Services.Competitions.V1.SingleEliminationStageConfig();
+            grpc.SingleEliminationConfig.Rounds.AddRange(
+                stage.SingleEliminationConfig.Rounds.Select(r => new GrpcStageRound { Name = r.Name, BestOf = r.BestOf }));
+        }
+        if (stage.DoubleEliminationConfig is not null)
+        {
+            grpc.DoubleEliminationConfig = new Revyne.Services.Competitions.V1.DoubleEliminationStageConfig
+            {
+                BracketReset = stage.DoubleEliminationConfig.BracketReset,
+            };
+            grpc.DoubleEliminationConfig.Rounds.AddRange(
+                stage.DoubleEliminationConfig.Rounds.Select(r => new GrpcStageRound { Name = r.Name, BestOf = r.BestOf }));
+        }
+        if (stage.SwissConfig is not null)
+        {
+            grpc.SwissConfig = new Revyne.Services.Competitions.V1.SwissStageConfig
+            {
+                PointsFormula = stage.SwissConfig.PointsFormula ?? string.Empty,
+            };
+        }
+        if (stage.RoundRobinConfig is not null)
+        {
+            grpc.RoundRobinConfig = new Revyne.Services.Competitions.V1.RoundRobinStageConfig
+            {
+                MaxGroupSize = stage.RoundRobinConfig.MaxGroupSize,
+                PointsPerWin = stage.RoundRobinConfig.PointsPerWin,
+                PointsPerDraw = stage.RoundRobinConfig.PointsPerDraw,
+                PointsPerLoss = stage.RoundRobinConfig.PointsPerLoss,
+            };
+        }
+
+        return grpc;
     }
 
     // ── League mappings ────────────────────────────────────────────────────────
@@ -264,5 +316,53 @@ internal static class GrpcInputMapper
             GrpcSeedingType.Manual => DomainSeedingType.Manual,
             _                     => DomainSeedingType.Standard,
         };
+    }
+
+    internal static DomainStage StageToDomain(GrpcStage grpcStage)
+    {
+        var stage = new DomainStage
+        {
+            Name = grpcStage.Name,
+            Format = grpcStage.Format.ToDomain(),
+            Order = grpcStage.Order,
+            Advancing = grpcStage.Advancing,
+        };
+
+        if (grpcStage.SingleEliminationConfig is not null)
+        {
+            stage.SingleEliminationConfig = new Domain.Competitions.Tournaments.Models.SingleEliminationStageConfig
+            {
+                Rounds = grpcStage.SingleEliminationConfig.Rounds
+                    .Select(r => new DomainStageRound { Name = r.Name, BestOf = r.BestOf }).ToList(),
+            };
+        }
+        if (grpcStage.DoubleEliminationConfig is not null)
+        {
+            stage.DoubleEliminationConfig = new Domain.Competitions.Tournaments.Models.DoubleEliminationStageConfig
+            {
+                BracketReset = grpcStage.DoubleEliminationConfig.BracketReset,
+                Rounds = grpcStage.DoubleEliminationConfig.Rounds
+                    .Select(r => new DomainStageRound { Name = r.Name, BestOf = r.BestOf }).ToList(),
+            };
+        }
+        if (grpcStage.SwissConfig is not null)
+        {
+            stage.SwissConfig = new Domain.Competitions.Tournaments.Models.SwissStageConfig
+            {
+                PointsFormula = grpcStage.SwissConfig.PointsFormula,
+            };
+        }
+        if (grpcStage.RoundRobinConfig is not null)
+        {
+            stage.RoundRobinConfig = new Domain.Competitions.Tournaments.Models.RoundRobinStageConfig
+            {
+                MaxGroupSize = grpcStage.RoundRobinConfig.MaxGroupSize,
+                PointsPerWin = grpcStage.RoundRobinConfig.PointsPerWin,
+                PointsPerDraw = grpcStage.RoundRobinConfig.PointsPerDraw,
+                PointsPerLoss = grpcStage.RoundRobinConfig.PointsPerLoss,
+            };
+        }
+
+        return stage;
     }
 }

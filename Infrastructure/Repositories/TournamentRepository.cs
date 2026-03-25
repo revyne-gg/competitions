@@ -1,4 +1,5 @@
-﻿using competitions.Application;
+﻿using System.Text.Json;
+using competitions.Application;
 using competitions.Application.Ports;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Domain.Models;
@@ -28,7 +29,11 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
             var config = await db.TournamentConfigs
                 .FirstOrDefaultAsync(x => x.CompetitionId == id && x.TenantId == tenantId);
 
-            return competition.ToTournamentDomain(config);
+            var stages = await db.TournamentStages
+                .Where(x => x.CompetitionId == id && x.TenantId == tenantId)
+                .ToListAsync();
+
+            return competition.ToTournamentDomain(config, stages);
         }
         catch (Exception e)
         {
@@ -121,6 +126,7 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
                 Format = tournament.Format,
                 SeedingType = tournament.SeedingType,
                 BracketReset = tournament.BracketReset,
+                MaxParticipants = tournament.MaxParticipants,
                 OrganiserId = tournament.OrganiserId,
                 RealmId = tournament.RealmId,
                 TenantId = tournament.TenantId,
@@ -128,6 +134,34 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
 
             await db.Competitions.AddAsync(entity);
             await db.TournamentConfigs.AddAsync(configEntity);
+
+            foreach (var stage in tournament.Stages)
+            {
+                string? formatConfigJson = stage.Format switch
+                {
+                    TournamentFormat.SingleElimination when stage.SingleEliminationConfig is not null
+                        => JsonSerializer.Serialize(stage.SingleEliminationConfig),
+                    TournamentFormat.DoubleElimination when stage.DoubleEliminationConfig is not null
+                        => JsonSerializer.Serialize(stage.DoubleEliminationConfig),
+                    TournamentFormat.Swiss when stage.SwissConfig is not null
+                        => JsonSerializer.Serialize(stage.SwissConfig),
+                    TournamentFormat.RoundRobin when stage.RoundRobinConfig is not null
+                        => JsonSerializer.Serialize(stage.RoundRobinConfig),
+                    _ => null
+                };
+
+                await db.TournamentStages.AddAsync(new TournamentStageEntity
+                {
+                    CompetitionId = tournament.Id,
+                    Name = stage.Name,
+                    Format = stage.Format,
+                    Order = stage.Order,
+                    Advancing = stage.Advancing,
+                    TenantId = tournament.TenantId,
+                    FormatConfigJson = formatConfigJson,
+                });
+            }
+
             await db.SaveChangesAsync();
 
             return Unit.Value;

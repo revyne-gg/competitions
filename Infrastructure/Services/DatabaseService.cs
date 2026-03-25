@@ -9,6 +9,7 @@ public sealed class DatabaseService : DbContext
 
     public DbSet<CompetitionEntity> Competitions => Set<CompetitionEntity>();
     public DbSet<TournamentConfigEntity> TournamentConfigs => Set<TournamentConfigEntity>();
+    public DbSet<TournamentStageEntity> TournamentStages => Set<TournamentStageEntity>();
     public DbSet<LeagueConfigEntity> LeagueConfigs => Set<LeagueConfigEntity>();
     public DbSet<DivisionEntity> Divisions => Set<DivisionEntity>();
     public DbSet<DivisionGroupEntity> DivisionGroups => Set<DivisionGroupEntity>();

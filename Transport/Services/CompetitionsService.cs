@@ -22,13 +22,15 @@ public class CompetitionsService(
             MapPool = request.MapPool.Count > 0 ? request.MapPool.ToList() : null,
             SeedingType = request.SeedingType.ToDomain(),
             BracketReset = request.BracketReset,
+            MaxParticipants = request.MaxParticipants,
+            Stages = request.Stages.Select(GrpcInputMapper.StageToDomain).ToList(),
         };
         
         var res = await createTournamentUseCase.Execute(
-            tournamentConfig, 
-            request.UserId, 
-            request.RealmId, 
-            request.OrganiserId, 
+            tournamentConfig,
+            request.OrganiserId,
+            request.RealmId,
+            request.UserId,
             request.TenantId
         );
 
