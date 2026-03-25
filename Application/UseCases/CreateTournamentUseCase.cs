@@ -10,28 +10,34 @@ public sealed class CreateTournamentUseCase(
     ITournamentRepository repo,
     IPermissionService permissionService,
     IIDGenerator idGenerator,
-    IDiscriminatorGenerator discriminatorGenerator
+    IDiscriminatorGenerator discriminatorGenerator,
+    ILogger<CreateTournamentUseCase> logger
 )
 {
     public async Task<Result<Tournament, AppError>> Execute(
         TournamentConfig config,
         string organiserId,
-        string realmId, 
-        string userId, 
+        string realmId,
+        string userId,
         string tenantId
     )
     {
+        logger.LogWarning("CreateTournament permission check: userId={UserId}, organiserId={OrganiserId}, realmId={RealmId}", userId, organiserId, realmId);
+
         var role = await permissionService.GetRoleForUserInOrganiser(userId, organiserId);
+        logger.LogWarning("Organiser role check result: IsSuccess={IsSuccess}, Value={Value}", role.IsSuccess, role.IsSuccess ? role.Value.ToString() : "N/A");
         var hasPermission = role.IsSuccess && role.Value is OrganiserMemberRole.Owner or OrganiserMemberRole.Manager;
 
         if (!hasPermission)
         {
             var realmRole = await permissionService.GetRoleForUserInRealm(userId, realmId);
+            logger.LogWarning("Realm role check result: IsSuccess={IsSuccess}, Value={Value}", realmRole.IsSuccess, realmRole.IsSuccess ? realmRole.Value.ToString() : "N/A");
             hasPermission = realmRole.IsSuccess && realmRole.Value is RealmMemberRole.Admin;
         }
 
         if (!hasPermission)
         {
+            logger.LogWarning("Permission denied for userId={UserId}", userId);
             return AppError.Forbidden;
         }
 
