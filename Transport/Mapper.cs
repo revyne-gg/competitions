@@ -99,6 +99,8 @@ internal static class Mapper
                 SeedingType = tournament.SeedingType.ToGrpc(),
                 BracketReset = tournament.BracketReset,
                 MaxParticipants = tournament.MaxParticipants,
+                OrganiserId = tournament.OrganiserId ?? string.Empty,
+                RealmId = tournament.RealmId ?? string.Empty,
             };
             if (tournament.MapPool is not null)
                 grpc.MapPool.AddRange(tournament.MapPool);
@@ -270,6 +272,20 @@ internal static class Mapper
                 TeamId = team.TeamId,
                 Status = team.Status.ToGrpc(),
                 CreatedAt = team.CreatedAt.ToTimestamp(),
+            };
+        }
+    }
+
+    extension(TournamentTeam tournamentTeam)
+    {
+        internal TournamentRegistration ToGrpc()
+        {
+            return new TournamentRegistration
+            {
+                TournamentId = tournamentTeam.TournamentId,
+                TeamId = tournamentTeam.TeamId,
+                Status = tournamentTeam.Status.ToGrpc(),
+                CreatedAt = tournamentTeam.CreatedAt.ToTimestamp(),
             };
         }
     }

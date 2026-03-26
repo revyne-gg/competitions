@@ -140,6 +140,21 @@ internal static class Mapper
         }
     }
 
+    extension (TournamentTeamEntity entity)
+    {
+        internal TournamentTeam ToDomain()
+        {
+            return new TournamentTeam
+            {
+                TournamentId = entity.TournamentId,
+                TeamId = entity.TeamId,
+                TenantId = entity.TenantId,
+                CreatedAt = entity.CreatedAt,
+                Status = entity.Status,
+            };
+        }
+    }
+
     extension (TournamentStageEntity entity)
     {
         internal Stage ToDomain()

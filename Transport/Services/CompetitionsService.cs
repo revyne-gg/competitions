@@ -24,6 +24,33 @@ public class CompetitionsService(
         return res.Value!.ToGrpc();
     }
 
+    public override async Task<PaginatedTournamentRegistrations> GetTournamentRegistrations(
+        GetTournamentRegistrationsRequest request, ServerCallContext context)
+    {
+        var page = request.Page > 0 ? (int)request.Page : 0;
+        var pageSize = request.PageSize > 0 ? (int)request.PageSize : 20;
+
+        var res = await tournamentRepo.GetRegistrationsAsync(request.TournamentId, request.TenantId, page, pageSize);
+        if (res.IsFailure)
+            throw new RpcException(new Status(StatusCode.Internal, "Internal error."));
+
+        var (items, totalCount) = res.Value;
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+        var response = new PaginatedTournamentRegistrations
+        {
+            Pagination = new PaginationMeta
+            {
+                Page = (uint)page,
+                TotalPages = (uint)totalPages,
+                HasNextPage = page < totalPages - 1,
+                HasPreviousPage = page > 0,
+            },
+        };
+        response.Items.AddRange(items.Select(t => t.ToGrpc()));
+        return response;
+    }
+
     public override async Task<Tournament> CreateTournament(CreateTournamentRequest request, ServerCallContext context)
     {
         var tournamentConfig = new TournamentConfig

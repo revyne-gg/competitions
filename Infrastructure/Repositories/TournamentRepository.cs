@@ -172,6 +172,27 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
         }
     }
 
+    public async Task<Result<(List<TournamentTeam> Items, int TotalCount), RepositoryError>> GetRegistrationsAsync(
+        string tournamentId, string tenantId, int page, int pageSize)
+    {
+        try
+        {
+            var db = await dbFactory.CreateDbContextAsync();
+            var query = db.TournamentTeams
+                .Where(x => x.TournamentId == tournamentId && x.TenantId == tenantId);
+
+            var totalCount = await query.CountAsync();
+            var entities = await query
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip(page * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (entities.Select(e => e.ToDomain()).ToList(), totalCount);
+        }
+        catch { return RepositoryError.DatabaseError; }
+    }
+
     public async Task<Result<Unit, RepositoryError>> Update(Tournament tournament)
     {
         try
