@@ -64,6 +64,8 @@ public class CompetitionsService(
             SeedingType = request.SeedingType.ToDomain(),
             BracketReset = request.BracketReset,
             MaxParticipants = request.MaxParticipants,
+            RegistrationType = request.RegistrationType.ToDomain(),
+            RegistrationPassword = string.IsNullOrEmpty(request.RegistrationPassword) ? null : request.RegistrationPassword,
             Stages = request.Stages.Select(GrpcInputMapper.StageToDomain).ToList(),
         };
         

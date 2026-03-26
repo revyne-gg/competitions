@@ -11,6 +11,8 @@ public class TournamentConfigEntity
     public SeedingType SeedingType { get; set; } = SeedingType.Standard;
     public bool BracketReset { get; set; }
     public int MaxParticipants { get; set; }
+    public RegistrationType RegistrationType { get; set; } = RegistrationType.Open;
+    public string? RegistrationPassword { get; set; }
     public string? OrganiserId { get; set; }
     public string? RealmId { get; set; }
     public string TenantId { get; set; }

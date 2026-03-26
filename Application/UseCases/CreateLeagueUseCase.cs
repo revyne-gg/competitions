@@ -1,5 +1,6 @@
 ﻿using competitions.Application.Ports;
 using competitions.Domain.Competitions.Leagues.Models;
+using competitions.Domain.Competitions.Shared.Models;
 using competitions.Domain.Models;
 using competitions.Shared;
 
@@ -43,7 +44,10 @@ public sealed class CreateLeagueUseCase(
         {
             return AppError.Forbidden;
         }
-        
+
+        if (!SupportedGames.IsSupported(config.Game))
+            return AppError.BadRequest;
+
         var discriminator = "";
         bool exist = false;
         do

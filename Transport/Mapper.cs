@@ -17,6 +17,8 @@ using DomainLeague = competitions.Domain.Models.League;
 using DomainLeagueStatus = competitions.Domain.Models.LeagueStatus;
 using DomainLeagueLegs = competitions.Domain.Competitions.Leagues.Models.LeagueLegs;
 using DomainSeedingType = competitions.Domain.Competitions.Tournaments.Models.SeedingType;
+using DomainRegistrationType = competitions.Domain.Competitions.Tournaments.Models.RegistrationType;
+using GrpcRegistrationType = Revyne.Services.Competitions.V1.RegistrationType;
 using DomainStage = competitions.Domain.Competitions.Tournaments.Models.Stage;
 using DomainStageRound = competitions.Domain.Competitions.Tournaments.Models.StageRound;
 using DomainDivision = competitions.Domain.Models.Division;
@@ -99,6 +101,8 @@ internal static class Mapper
                 SeedingType = tournament.SeedingType.ToGrpc(),
                 BracketReset = tournament.BracketReset,
                 MaxParticipants = tournament.MaxParticipants,
+                RegistrationType = tournament.RegistrationType.ToGrpc(),
+                RegistrationPassword = tournament.RegistrationPassword ?? string.Empty,
                 OrganiserId = tournament.OrganiserId ?? string.Empty,
                 RealmId = tournament.RealmId ?? string.Empty,
             };
@@ -219,6 +223,16 @@ internal static class Mapper
         };
     }
 
+    extension(DomainRegistrationType registrationType)
+    {
+        internal GrpcRegistrationType ToGrpc() => registrationType switch
+        {
+            DomainRegistrationType.InviteOnly => GrpcRegistrationType.InviteOnly,
+            DomainRegistrationType.Password   => GrpcRegistrationType.Password,
+            _                                 => GrpcRegistrationType.Open,
+        };
+    }
+
     // ── Division mappings ──────────────────────────────────────────────────────
 
     extension(DomainDivision division)
@@ -331,6 +345,16 @@ internal static class GrpcInputMapper
             GrpcSeedingType.Random => DomainSeedingType.Random,
             GrpcSeedingType.Manual => DomainSeedingType.Manual,
             _                     => DomainSeedingType.Standard,
+        };
+    }
+
+    extension(GrpcRegistrationType registrationType)
+    {
+        internal DomainRegistrationType ToDomain() => registrationType switch
+        {
+            GrpcRegistrationType.InviteOnly => DomainRegistrationType.InviteOnly,
+            GrpcRegistrationType.Password   => DomainRegistrationType.Password,
+            _                               => DomainRegistrationType.Open,
         };
     }
 

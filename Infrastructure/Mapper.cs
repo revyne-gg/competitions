@@ -42,6 +42,8 @@ internal static class Mapper
                 SeedingType = config?.SeedingType ?? default,
                 BracketReset = config?.BracketReset ?? false,
                 MaxParticipants = config?.MaxParticipants ?? 0,
+                RegistrationType = config?.RegistrationType ?? RegistrationType.Open,
+                RegistrationPassword = config?.RegistrationPassword,
                 OrganiserId = config?.OrganiserId,
                 RealmId = config?.RealmId,
                 Stages = stageEntities?.OrderBy(s => s.Order).Select(s => s.ToDomain()).ToList() ?? new(),

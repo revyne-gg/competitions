@@ -127,6 +127,8 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
                 SeedingType = tournament.SeedingType,
                 BracketReset = tournament.BracketReset,
                 MaxParticipants = tournament.MaxParticipants,
+                RegistrationType = tournament.RegistrationType,
+                RegistrationPassword = tournament.RegistrationPassword,
                 OrganiserId = tournament.OrganiserId,
                 RealmId = tournament.RealmId,
                 TenantId = tournament.TenantId,
@@ -218,6 +220,8 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
                 config.Format = tournament.Format;
                 config.SeedingType = tournament.SeedingType;
                 config.BracketReset = tournament.BracketReset;
+                config.RegistrationType = tournament.RegistrationType;
+                config.RegistrationPassword = tournament.RegistrationPassword;
                 config.OrganiserId = tournament.OrganiserId;
                 config.RealmId = tournament.RealmId;
             }

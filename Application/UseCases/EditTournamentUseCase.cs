@@ -1,5 +1,6 @@
 using competitions.Application.Ports;
 using competitions.Domain.Competitions.Leagues.Models;
+using competitions.Domain.Competitions.Shared.Models;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Shared;
 
@@ -33,6 +34,9 @@ public sealed class EditTournamentUseCase(
             return tournamentResult.Error == RepositoryError.NotFound ? AppError.NotFound : AppError.InternalError;
 
         var tournament = tournamentResult.Value!;
+
+        if (game is not null && !SupportedGames.IsSupported(game))
+            return AppError.BadRequest;
 
         if (name is not null) tournament.Name = name;
         if (description is not null) tournament.Description = description;

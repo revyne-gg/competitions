@@ -1,5 +1,6 @@
 using competitions.Application.Ports;
 using competitions.Domain.Competitions.Leagues.Models;
+using competitions.Domain.Competitions.Shared.Models;
 using competitions.Domain.Models;
 using competitions.Shared;
 
@@ -36,6 +37,9 @@ public sealed class EditLeagueUseCase(
             return leagueResult.Error == RepositoryError.NotFound ? AppError.NotFound : AppError.InternalError;
 
         var league = leagueResult.Value!;
+
+        if (game is not null && !SupportedGames.IsSupported(game))
+            return AppError.BadRequest;
 
         if (league.HasStarted)
         {

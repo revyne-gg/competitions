@@ -8,5 +8,7 @@ public class TournamentConfig : CompetitionConfig
     public SeedingType SeedingType { get; set; } = SeedingType.Standard;
     public bool BracketReset { get; set; }
     public int MaxParticipants { get; set; }
+    public RegistrationType RegistrationType { get; set; } = RegistrationType.Open;
+    public string? RegistrationPassword { get; set; }
     public List<Stage> Stages { get; set; } = new();
 }

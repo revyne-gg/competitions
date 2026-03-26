@@ -1,5 +1,6 @@
 ﻿using competitions.Application.Ports;
 using competitions.Domain.Competitions.Leagues.Models;
+using competitions.Domain.Competitions.Shared.Models;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Domain.Models;
 using competitions.Shared;
@@ -40,6 +41,9 @@ public sealed class CreateTournamentUseCase(
             logger.LogWarning("Permission denied for userId={UserId}", userId);
             return AppError.Forbidden;
         }
+
+        if (!SupportedGames.IsSupported(config.Game))
+            return AppError.BadRequest;
 
         var discriminator = "";
         bool exist = false;
@@ -100,6 +104,8 @@ public sealed class CreateTournamentUseCase(
             SeedingType = config.SeedingType,
             BracketReset = config.BracketReset,
             MaxParticipants = config.MaxParticipants,
+            RegistrationType = config.RegistrationType,
+            RegistrationPassword = config.RegistrationPassword,
             Discriminator = discriminator,
             Description = config.Description,
             CreatedAt = DateTime.UtcNow,
