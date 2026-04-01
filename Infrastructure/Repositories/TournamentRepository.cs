@@ -195,6 +195,59 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
         catch { return RepositoryError.DatabaseError; }
     }
 
+    public async Task<Result<TournamentTeam, RepositoryError>> AddRegistrationAsync(TournamentTeam registration)
+    {
+        try
+        {
+            var db = await dbFactory.CreateDbContextAsync();
+
+            var existing = await db.TournamentTeams
+                .FirstOrDefaultAsync(x => x.TournamentId == registration.TournamentId
+                                          && x.TeamId == registration.TeamId
+                                          && x.TenantId == registration.TenantId);
+
+            if (existing is not null)
+                return RepositoryError.AlreadyExists;
+
+            var entity = new TournamentTeamEntity
+            {
+                TournamentId = registration.TournamentId,
+                TeamId = registration.TeamId,
+                TenantId = registration.TenantId,
+                CreatedAt = registration.CreatedAt,
+                Status = registration.Status,
+            };
+
+            await db.TournamentTeams.AddAsync(entity);
+            await db.SaveChangesAsync();
+
+            return entity.ToDomain();
+        }
+        catch { return RepositoryError.DatabaseError; }
+    }
+
+    public async Task<Result<Unit, RepositoryError>> RemoveRegistrationAsync(string tournamentId, string teamId, string tenantId)
+    {
+        try
+        {
+            var db = await dbFactory.CreateDbContextAsync();
+
+            var entity = await db.TournamentTeams
+                .FirstOrDefaultAsync(x => x.TournamentId == tournamentId
+                                          && x.TeamId == teamId
+                                          && x.TenantId == tenantId);
+
+            if (entity is null)
+                return RepositoryError.NotFound;
+
+            db.TournamentTeams.Remove(entity);
+            await db.SaveChangesAsync();
+
+            return Unit.Value;
+        }
+        catch { return RepositoryError.DatabaseError; }
+    }
+
     public async Task<Result<Unit, RepositoryError>> Update(Tournament tournament)
     {
         try
@@ -234,5 +287,71 @@ public class TournamentRepository(IDbContextFactory<DatabaseService> dbFactory) 
         {
             return RepositoryError.DatabaseError;
         }
+    }
+
+    public async Task<Result<TournamentRules, RepositoryError>> GetRulesAsync(string tournamentId, string tenantId)
+    {
+        try
+        {
+            var db = await dbFactory.CreateDbContextAsync();
+            var entity = await db.TournamentRules
+                .FirstOrDefaultAsync(x => x.TournamentId == tournamentId && x.TenantId == tenantId);
+
+            if (entity is null)
+                return new TournamentRules
+                {
+                    TournamentId = tournamentId,
+                    Content = string.Empty,
+                    TenantId = tenantId,
+                    UpdatedAt = DateTime.UtcNow,
+                };
+
+            return new TournamentRules
+            {
+                TournamentId = entity.TournamentId,
+                Content = entity.Content,
+                TenantId = entity.TenantId,
+                UpdatedAt = entity.UpdatedAt,
+            };
+        }
+        catch { return RepositoryError.DatabaseError; }
+    }
+
+    public async Task<Result<TournamentRules, RepositoryError>> UpsertRulesAsync(TournamentRules rules)
+    {
+        try
+        {
+            var db = await dbFactory.CreateDbContextAsync();
+            var entity = await db.TournamentRules
+                .FirstOrDefaultAsync(x => x.TournamentId == rules.TournamentId && x.TenantId == rules.TenantId);
+
+            if (entity is null)
+            {
+                entity = new TournamentRulesEntity
+                {
+                    TournamentId = rules.TournamentId,
+                    Content = rules.Content,
+                    TenantId = rules.TenantId,
+                    UpdatedAt = DateTime.UtcNow,
+                };
+                await db.TournamentRules.AddAsync(entity);
+            }
+            else
+            {
+                entity.Content = rules.Content;
+                entity.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await db.SaveChangesAsync();
+
+            return new TournamentRules
+            {
+                TournamentId = entity.TournamentId,
+                Content = entity.Content,
+                TenantId = entity.TenantId,
+                UpdatedAt = entity.UpdatedAt,
+            };
+        }
+        catch { return RepositoryError.DatabaseError; }
     }
 }

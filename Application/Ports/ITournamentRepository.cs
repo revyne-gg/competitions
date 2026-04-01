@@ -12,4 +12,8 @@ public interface ITournamentRepository
     Task<Result<Unit, RepositoryError>> AddAsync(Tournament tournament);
     Task<Result<Unit, RepositoryError>> Update(Tournament tournament);
     Task<Result<(List<TournamentTeam> Items, int TotalCount), RepositoryError>> GetRegistrationsAsync(string tournamentId, string tenantId, int page, int pageSize);
+    Task<Result<TournamentTeam, RepositoryError>> AddRegistrationAsync(TournamentTeam registration);
+    Task<Result<Unit, RepositoryError>> RemoveRegistrationAsync(string tournamentId, string teamId, string tenantId);
+    Task<Result<TournamentRules, RepositoryError>> GetRulesAsync(string tournamentId, string tenantId);
+    Task<Result<TournamentRules, RepositoryError>> UpsertRulesAsync(TournamentRules rules);
 }

@@ -3,14 +3,18 @@ using competitions.Application.Ports;
 using competitions.Application.UseCases;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Shared;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Revyne.Services.Competitions.V1;
 using Tournament = Revyne.Services.Competitions.V1.Tournament;
+using TournamentRules = Revyne.Services.Competitions.V1.TournamentRules;
 
 namespace competitions.Transport.Services;
 
 public class CompetitionsService(
     CreateTournamentUseCase createTournamentUseCase,
+    RegisterTeamForTournamentUseCase registerTeamForTournamentUseCase,
+    UpdateTournamentRulesUseCase updateTournamentRulesUseCase,
     ITournamentRepository tournamentRepo
 ) : Revyne.Services.Competitions.V1.CompetitionsService.CompetitionsServiceBase
 {
@@ -83,5 +87,73 @@ public class CompetitionsService(
         }
         
         return res.Value!.ToGrpc();
+    }
+
+    public override async Task<TournamentRegistration> RegisterTeamForTournament(
+        RegisterTeamForTournamentRequest request, ServerCallContext context)
+    {
+        var res = await registerTeamForTournamentUseCase.Execute(
+            request.TournamentId,
+            request.TeamId,
+            request.Password,
+            request.UserId,
+            request.TenantId
+        );
+
+        if (res.IsFailure)
+            throw res.Error!.Value.ToGrpcError();
+
+        return res.Value!.ToGrpc();
+    }
+
+    public override async Task<Google.Protobuf.WellKnownTypes.Empty> UnregisterTeamFromTournament(
+        UnregisterTeamFromTournamentRequest request, ServerCallContext context)
+    {
+        var res = await tournamentRepo.RemoveRegistrationAsync(
+            request.TournamentId, request.TeamId, request.TenantId);
+
+        if (res.IsFailure)
+            throw new RpcException(res.Error == RepositoryError.NotFound
+                ? new Status(StatusCode.NotFound, "Registration not found.")
+                : new Status(StatusCode.Internal, "Internal error."));
+
+        return new Google.Protobuf.WellKnownTypes.Empty();
+    }
+
+    public override async Task<TournamentRules> GetTournamentRules(GetTournamentRulesRequest request, ServerCallContext context)
+    {
+        var res = await tournamentRepo.GetRulesAsync(request.TournamentId, request.TenantId);
+        if (res.IsFailure)
+            throw new RpcException(new Status(StatusCode.Internal, "Internal error."));
+
+        var rules = res.Value!;
+        return new TournamentRules
+        {
+            TournamentId = rules.TournamentId,
+            Content = rules.Content,
+            UpdatedAt = rules.UpdatedAt.ToTimestamp(),
+        };
+    }
+
+    public override async Task<TournamentRules> UpdateTournamentRules(UpdateTournamentRulesRequest request, ServerCallContext context)
+    {
+        var res = await updateTournamentRulesUseCase.Execute(
+            request.TournamentId,
+            request.Content,
+            request.OrganiserId,
+            request.UserId,
+            request.TenantId
+        );
+
+        if (res.IsFailure)
+            throw res.Error!.Value.ToGrpcError();
+
+        var rules = res.Value!;
+        return new TournamentRules
+        {
+            TournamentId = rules.TournamentId,
+            Content = rules.Content,
+            UpdatedAt = rules.UpdatedAt.ToTimestamp(),
+        };
     }
 }

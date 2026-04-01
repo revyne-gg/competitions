@@ -7,5 +7,6 @@ public enum RepositoryError
     DuplicateLeague = 2,
     NoPermission = 3,
     NotFound = 4,
-    InternalError = 5
+    InternalError = 5,
+    AlreadyExists = 6
 }

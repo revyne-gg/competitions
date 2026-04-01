@@ -58,6 +58,7 @@ builder.Services.AddScoped<ITournamentEngine, RoundRobinEngine>();
 builder.Services.AddScoped<ICompetitionEngine, LeagueEngine>();
 
 builder.Services.AddScoped<CreateTournamentUseCase>();
+builder.Services.AddScoped<RegisterTeamForTournamentUseCase>();
 builder.Services.AddScoped<CreateLeagueUseCase>();
 builder.Services.AddScoped<CreateDivisionUseCase>();
 builder.Services.AddScoped<CreateDivisionGroupUseCase>();

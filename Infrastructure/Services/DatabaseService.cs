@@ -20,4 +20,5 @@ public sealed class DatabaseService : DbContext
     public DbSet<DivisionGroupTeamEntity> DivisionGroupTeams => Set<DivisionGroupTeamEntity>();
     public DbSet<RosterEntity> Rosters => Set<RosterEntity>();
     public DbSet<MatchEntity> Matches => Set<MatchEntity>();
+    public DbSet<TournamentRulesEntity> TournamentRules => Set<TournamentRulesEntity>();
 }
