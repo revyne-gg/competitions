@@ -1,4 +1,5 @@
 using competitions.Application.Ports;
+using competitions.Domain.Competitions.Leagues.Models;
 using competitions.Domain.Competitions.Shared.Models;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Shared;
