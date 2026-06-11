@@ -3,28 +3,33 @@ using competitions.Application;
 using competitions.Application.Ports;
 using competitions.Application.UseCases;
 using competitions.Domain.Competitions.Matches.Models;
-using competitions.Domain.Competitions.Shared.Models;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Domain.Models;
 using competitions.Shared;
 using NSubstitute;
+using Engine = Revyne.Engine.Api;
 
 namespace competitions.Tests.UseCases;
 
 public class ReportMatchScoreUseCaseTests
 {
     private readonly IMatchRepository _matchRepo = Substitute.For<IMatchRepository>();
-    private readonly ICompetitionEngine _leagueEngine = Substitute.For<ICompetitionEngine>();
-    private readonly ICompetitionEngine _tournamentEngine = Substitute.For<ICompetitionEngine>();
+    private readonly Engine.ICompetitionEngine _engine = Substitute.For<Engine.ICompetitionEngine>();
 
-    private ReportMatchScoreUseCase CreateSut() =>
-        new(_matchRepo, new[] { _leagueEngine, _tournamentEngine });
+    private ReportMatchScoreUseCase CreateSut() => new(_matchRepo, _engine);
 
-    public ReportMatchScoreUseCaseTests()
-    {
-        _leagueEngine.Type.Returns(CompetitionType.League);
-        _tournamentEngine.Type.Returns(CompetitionType.Tournament);
-    }
+    private static Engine.Result<Engine.MatchOutcome, Engine.CompetitionError> Outcome(
+        string? winner = "teamA", string? loser = "teamB") =>
+        Engine.Result<Engine.MatchOutcome, Engine.CompetitionError>.Success(
+            new Engine.MatchOutcome { WinnerTeamId = winner, LoserTeamId = loser });
+
+    private static Engine.Result<Engine.MatchOutcome, Engine.CompetitionError> EngineError(
+        Engine.CompetitionError error) =>
+        Engine.Result<Engine.MatchOutcome, Engine.CompetitionError>.Failure(error);
+
+    private void StubEngine(Engine.Result<Engine.MatchOutcome, Engine.CompetitionError> result) =>
+        _engine.ResolveOutcome(Arg.Any<Engine.EngineCompetitionConfig>(), Arg.Any<Engine.FinishedMatch>())
+            .Returns(result);
 
     private static Match MatchWithLeague(string id = "match1") => new()
     {
@@ -76,8 +81,7 @@ public class ReportMatchScoreUseCaseTests
         var match = MatchWithLeague();
         _matchRepo.GetByIdAsync("match1", "tenant1")
             .Returns(Result<Match, RepositoryError>.Success(match));
-        _leagueEngine.OnMatchFinished(Arg.Any<Match>())
-            .Returns(Result<Unit, CompetitionError>.Success(Unit.Value));
+        StubEngine(Outcome());
         _matchRepo.Update(Arg.Any<Match>())
             .Returns(Result<Unit, RepositoryError>.Success(Unit.Value));
 
@@ -86,7 +90,9 @@ public class ReportMatchScoreUseCaseTests
         Assert.True(result.IsSuccess);
         Assert.Equal(3, match.ScoreHome);
         Assert.Equal(1, match.ScoreAway);
-        await _leagueEngine.Received(1).OnMatchFinished(match);
+        Assert.Equal("teamA", match.WinnerTeamId);
+        Assert.Equal("teamB", match.LoserTeamId);
+        _engine.Received(1).ResolveOutcome(Arg.Any<Engine.EngineCompetitionConfig>(), Arg.Any<Engine.FinishedMatch>());
         await _matchRepo.Received(1).Update(match);
     }
 
@@ -96,15 +102,14 @@ public class ReportMatchScoreUseCaseTests
         var match = MatchWithTournament();
         _matchRepo.GetByIdAsync("match1", "tenant1")
             .Returns(Result<Match, RepositoryError>.Success(match));
-        _tournamentEngine.OnMatchFinished(Arg.Any<Match>())
-            .Returns(Result<Unit, CompetitionError>.Success(Unit.Value));
+        StubEngine(Outcome());
         _matchRepo.Update(Arg.Any<Match>())
             .Returns(Result<Unit, RepositoryError>.Success(Unit.Value));
 
         var result = await CreateSut().Execute("match1", 2, 0, "tenant1");
 
         Assert.True(result.IsSuccess);
-        await _tournamentEngine.Received(1).OnMatchFinished(match);
+        _engine.Received(1).ResolveOutcome(Arg.Any<Engine.EngineCompetitionConfig>(), Arg.Any<Engine.FinishedMatch>());
     }
 
     [Fact]
@@ -144,29 +149,12 @@ public class ReportMatchScoreUseCaseTests
     }
 
     [Fact]
-    public async Task Execute_ReturnsInternalError_WhenNoEngineMatchesCompetitionType()
-    {
-        var match = MatchWithLeague();
-        _matchRepo.GetByIdAsync("match1", "tenant1")
-            .Returns(Result<Match, RepositoryError>.Success(match));
-
-        // Only tournament engine available
-        var sut = new ReportMatchScoreUseCase(_matchRepo, new[] { _tournamentEngine });
-
-        var result = await sut.Execute("match1", 1, 0, "tenant1");
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(AppError.InternalError, result.Error);
-    }
-
-    [Fact]
     public async Task Execute_ReturnsBadRequest_WhenEngineReturnsInvalidArguments()
     {
         var match = MatchWithLeague();
         _matchRepo.GetByIdAsync("match1", "tenant1")
             .Returns(Result<Match, RepositoryError>.Success(match));
-        _leagueEngine.OnMatchFinished(Arg.Any<Match>())
-            .Returns(Result<Unit, CompetitionError>.Failure(CompetitionError.InvalidArguments));
+        StubEngine(EngineError(Engine.CompetitionError.InvalidArguments));
 
         var result = await CreateSut().Execute("match1", 1, 0, "tenant1");
 
@@ -180,8 +168,7 @@ public class ReportMatchScoreUseCaseTests
         var match = MatchWithLeague();
         _matchRepo.GetByIdAsync("match1", "tenant1")
             .Returns(Result<Match, RepositoryError>.Success(match));
-        _leagueEngine.OnMatchFinished(Arg.Any<Match>())
-            .Returns(Result<Unit, CompetitionError>.Failure(CompetitionError.NotFound));
+        StubEngine(EngineError(Engine.CompetitionError.NotFound));
 
         var result = await CreateSut().Execute("match1", 1, 0, "tenant1");
 
@@ -195,8 +182,7 @@ public class ReportMatchScoreUseCaseTests
         var match = MatchWithLeague();
         _matchRepo.GetByIdAsync("match1", "tenant1")
             .Returns(Result<Match, RepositoryError>.Success(match));
-        _leagueEngine.OnMatchFinished(Arg.Any<Match>())
-            .Returns(Result<Unit, CompetitionError>.Failure(CompetitionError.InternalError));
+        StubEngine(EngineError(Engine.CompetitionError.InternalError));
 
         var result = await CreateSut().Execute("match1", 1, 0, "tenant1");
 
@@ -210,8 +196,7 @@ public class ReportMatchScoreUseCaseTests
         var match = MatchWithLeague();
         _matchRepo.GetByIdAsync("match1", "tenant1")
             .Returns(Result<Match, RepositoryError>.Success(match));
-        _leagueEngine.OnMatchFinished(Arg.Any<Match>())
-            .Returns(Result<Unit, CompetitionError>.Success(Unit.Value));
+        StubEngine(Outcome());
         _matchRepo.Update(Arg.Any<Match>())
             .Returns(Result<Unit, RepositoryError>.Failure(RepositoryError.DatabaseError));
 
@@ -227,11 +212,11 @@ public class ReportMatchScoreUseCaseTests
         var match = MatchWithLeague();
         _matchRepo.GetByIdAsync("match1", "tenant1")
             .Returns(Result<Match, RepositoryError>.Success(match));
-        _leagueEngine.OnMatchFinished(Arg.Do<Match>(m =>
+        _engine.ResolveOutcome(Arg.Any<Engine.EngineCompetitionConfig>(), Arg.Do<Engine.FinishedMatch>(fm =>
         {
-            Assert.Equal(5, m.ScoreHome);
-            Assert.Equal(2, m.ScoreAway);
-        })).Returns(Result<Unit, CompetitionError>.Success(Unit.Value));
+            Assert.Equal(5, fm.ScoreHome);
+            Assert.Equal(2, fm.ScoreAway);
+        })).Returns(Outcome());
         _matchRepo.Update(Arg.Any<Match>())
             .Returns(Result<Unit, RepositoryError>.Success(Unit.Value));
 

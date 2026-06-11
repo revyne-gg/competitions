@@ -6,6 +6,7 @@ using competitions.Domain.Competitions.Leagues.Models;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Domain.Models;
 using competitions.Shared;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace competitions.Tests.UseCases;
@@ -16,9 +17,10 @@ public class CreateTournamentUseCaseTests
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();
     private readonly IIDGenerator _idGenerator = Substitute.For<IIDGenerator>();
     private readonly IDiscriminatorGenerator _discriminatorGenerator = Substitute.For<IDiscriminatorGenerator>();
+    private readonly ILogger<CreateTournamentUseCase> _logger = Substitute.For<ILogger<CreateTournamentUseCase>>();
 
     private CreateTournamentUseCase CreateSut() =>
-        new(_repo, _permissions, _idGenerator, _discriminatorGenerator);
+        new(_repo, _permissions, _idGenerator, _discriminatorGenerator, _logger);
 
     private static TournamentConfig DefaultConfig() => new()
     {

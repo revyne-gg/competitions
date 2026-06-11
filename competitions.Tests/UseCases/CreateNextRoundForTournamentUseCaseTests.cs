@@ -15,7 +15,7 @@ public class CreateNextRoundForTournamentUseCaseTests
     private readonly IMatchRepository _matchRepo = Substitute.For<IMatchRepository>();
     private readonly IIDGenerator _idGenerator = Substitute.For<IIDGenerator>();
 
-    private CreateNextRoundForTournamentUseCase CreateSut() => new(_tournamentRepo, _matchRepo, _idGenerator);
+    private CreateNextRoundForTournamentUseCase CreateSut() => new(_tournamentRepo, _matchRepo, _idGenerator, TestEngine.Create());
 
     private static Tournament DefaultTournament(TournamentFormat format = TournamentFormat.SingleElimination) => new()
     {

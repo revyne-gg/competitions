@@ -23,6 +23,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- Open engine contract only. The service ships a ReferenceCompetitionEngine
+             and registers it via TryAdd, so a private engine (e.g. core-engine via
+             its HostingStartup) can override it at deploy without changing this repo. -->
+        <ProjectReference Include="..\engine-api\engine-api.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="Domain\Competitions\Tournaments\Models\RoundRobin\" />
     </ItemGroup>
 

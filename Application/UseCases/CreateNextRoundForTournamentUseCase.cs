@@ -1,14 +1,17 @@
+using competitions.Application.Mapping;
 using competitions.Application.Ports;
 using competitions.Domain.Competitions.Matches.Models;
 using competitions.Domain.Competitions.Tournaments.Models;
 using competitions.Shared;
+using Engine = Revyne.Engine.Api;
 
 namespace competitions.Application.UseCases;
 
 public sealed class CreateNextRoundForTournamentUseCase(
     ITournamentRepository tournamentRepo,
     IMatchRepository matchRepo,
-    IIDGenerator idGenerator
+    IIDGenerator idGenerator,
+    Engine.ICompetitionEngine engine
 )
 {
     public async Task<Result<List<Match>, AppError>> Execute(string tournamentId, string tenantId)
@@ -37,31 +40,32 @@ public sealed class CreateNextRoundForTournamentUseCase(
         if (currentRoundMatches.Any(m => m.WinnerTeamId is null))
             return AppError.Conflict; // Current round still in progress
 
-        var winners = currentRoundMatches
+        // Engine pairs the next round from the played matches (seed order preserved).
+        var played = allMatches
             .OrderBy(m => m.CreatedAt)
-            .Select(m => m.WinnerTeamId!)
+            .Select(m => m.ToFinishedMatch())
             .ToList();
 
-        if (winners.Count == 1)
-            return AppError.Conflict; // Tournament complete — one champion remains
+        var generated = engine.GenerateNextMatches(tournament.ToEngineConfig(), played);
+        if (generated.IsFailure)
+            return generated.Error.ToAppError();
 
-        if (winners.Count % 2 != 0)
-            return AppError.BadRequest; // Unexpected odd number of winners
+        if (generated.Value!.Count == 0)
+            return AppError.Conflict; // Tournament complete — one champion remains
 
         var now = DateTime.UtcNow;
         var nextRoundMatches = new List<Match>();
-        int nextRound = currentRound + 1;
 
-        for (int i = 0; i < winners.Count; i += 2)
+        foreach (var spec in generated.Value)
         {
             var rawId = await idGenerator.Generate();
             nextRoundMatches.Add(new Match
             {
                 Id = $"match_{rawId}",
                 CompetitionId = tournamentId,
-                HomeTeamId = winners[i],
-                AwayTeamId = winners[i + 1],
-                Round = nextRound,
+                HomeTeamId = spec.HomeTeamId,
+                AwayTeamId = spec.AwayTeamId,
+                Round = spec.Round,
                 TenantId = tenantId,
                 CreatedAt = now,
                 Meta = new MatchMeta(),

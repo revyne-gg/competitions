@@ -1,14 +1,16 @@
+using competitions.Application.Mapping;
 using competitions.Application.Ports;
-using competitions.Domain.Competitions.Leagues.Models;
 using competitions.Domain.Competitions.Matches.Models;
 using competitions.Shared;
+using Engine = Revyne.Engine.Api;
 
 namespace competitions.Application.UseCases;
 
 public sealed class CreateMatchesForLeagueUseCase(
     ILeagueRepository leagueRepo,
     IMatchRepository matchRepo,
-    IIDGenerator idGenerator
+    IIDGenerator idGenerator,
+    Engine.ICompetitionEngine engine
 )
 {
     public async Task<Result<List<Match>, AppError>> Execute(string leagueId, string tenantId)
@@ -23,6 +25,7 @@ public sealed class CreateMatchesForLeagueUseCase(
         if (divisionsResult.IsFailure)
             return AppError.InternalError;
 
+        var engineConfig = league.ToEngineConfig();
         var allMatches = new List<Match>();
         var now = DateTime.UtcNow;
 
@@ -38,39 +41,25 @@ public sealed class CreateMatchesForLeagueUseCase(
                 if (teams.Count < 2)
                     continue;
 
-                var pairs = GenerateRoundRobinPairs(teams);
+                // Engine generates the per-group fixtures (incl. second leg).
+                var generated = engine.GenerateInitialMatches(engineConfig, teams);
+                if (generated.IsFailure)
+                    return generated.Error.ToAppError();
 
-                foreach (var (home, away) in pairs)
+                foreach (var spec in generated.Value!)
                 {
                     var rawId = await idGenerator.Generate();
                     allMatches.Add(new Match
                     {
                         Id = $"match_{rawId}",
                         CompetitionId = leagueId,
-                        HomeTeamId = home,
-                        AwayTeamId = away,
+                        HomeTeamId = spec.HomeTeamId,
+                        AwayTeamId = spec.AwayTeamId,
+                        // Round is not meaningful for league round-robin fixtures.
                         TenantId = tenantId,
                         CreatedAt = now,
                         Meta = new MatchMeta(),
                     });
-                }
-
-                if (league.Legs == LeagueLegs.TwoLegs)
-                {
-                    foreach (var (home, away) in pairs)
-                    {
-                        var rawId = await idGenerator.Generate();
-                        allMatches.Add(new Match
-                        {
-                            Id = $"match_{rawId}",
-                            CompetitionId = leagueId,
-                            HomeTeamId = away,
-                            AwayTeamId = home,
-                            TenantId = tenantId,
-                            CreatedAt = now,
-                            Meta = new MatchMeta(),
-                        });
-                    }
                 }
             }
         }
@@ -83,18 +72,5 @@ public sealed class CreateMatchesForLeagueUseCase(
             return AppError.InternalError;
 
         return allMatches;
-    }
-
-    private static List<(string Home, string Away)> GenerateRoundRobinPairs(List<string> teams)
-    {
-        var pairs = new List<(string, string)>();
-        for (int i = 0; i < teams.Count; i++)
-        {
-            for (int j = i + 1; j < teams.Count; j++)
-            {
-                pairs.Add((teams[i], teams[j]));
-            }
-        }
-        return pairs;
     }
 }

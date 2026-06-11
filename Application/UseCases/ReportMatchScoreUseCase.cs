@@ -1,13 +1,13 @@
-﻿using competitions.Application.Ports;
-using competitions.Domain.Competitions.Shared.Models;
-using competitions.Domain.Models;
+using competitions.Application.Mapping;
+using competitions.Application.Ports;
 using competitions.Shared;
+using Engine = Revyne.Engine.Api;
 
 namespace competitions.Application.UseCases;
 
 public sealed class ReportMatchScoreUseCase(
     IMatchRepository matchRepository,
-    IEnumerable<ICompetitionEngine> engines
+    Engine.ICompetitionEngine engine
 )
 {
     public async Task<Result<Unit, AppError>> Execute(
@@ -36,22 +36,14 @@ public sealed class ReportMatchScoreUseCase(
             return AppError.BadRequest;
         }
 
-        var engine = engines.FirstOrDefault(e => e.Type == match.Competition.Type);
-        if (engine is null)
+        var outcome = engine.ResolveOutcome(match.Competition.ToEngineConfig(), match.ToFinishedMatch());
+        if (outcome.IsFailure)
         {
-            return AppError.InternalError;
+            return outcome.Error.ToAppError();
         }
 
-        var engineResult = await engine.OnMatchFinished(match);
-        if (engineResult.IsFailure)
-        {
-            return engineResult.Error switch
-            {
-                CompetitionError.InvalidArguments => AppError.BadRequest,
-                CompetitionError.NotFound => AppError.NotFound,
-                _ => AppError.InternalError
-            };
-        }
+        match.WinnerTeamId = outcome.Value!.WinnerTeamId;
+        match.LoserTeamId = outcome.Value.LoserTeamId;
 
         var updateResult = await matchRepository.Update(match);
         if (updateResult.IsFailure)

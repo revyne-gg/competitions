@@ -16,7 +16,7 @@ public class CreateMatchesForLeagueUseCaseTests
     private readonly IMatchRepository _matchRepo = Substitute.For<IMatchRepository>();
     private readonly IIDGenerator _idGenerator = Substitute.For<IIDGenerator>();
 
-    private CreateMatchesForLeagueUseCase CreateSut() => new(_leagueRepo, _matchRepo, _idGenerator);
+    private CreateMatchesForLeagueUseCase CreateSut() => new(_leagueRepo, _matchRepo, _idGenerator, TestEngine.Create());
 
     private static League DefaultLeague(LeagueLegs legs = LeagueLegs.OneLeg) => new()
     {
