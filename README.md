@@ -1,93 +1,66 @@
-# leagues
+# competitions 🏆
 
+The bit of [Revyne](https://revyne.gg) that runs the actual competitions: leagues, tournaments, brackets, standings, all the things that decide who gets bragging rights and who quietly uninstalls.
 
+It is a .NET 10 gRPC microservice talking PostgreSQL and NATS, built the Clean Architecture way (Domain → Application → Infrastructure → Transport). Multi-tenant from top to bottom, so everything is scoped to a `tenantId` and nobody's league leaks into anybody else's. 🔒
+
+## What it does
+
+- **Leagues** with Divisions → Division Groups → Standings, soft delete and GDPR anonymisation included 🧹
+- **Tournaments** in the formats people actually argue about: Single Elimination, Double Elimination, Swiss and Round Robin
+- A pluggable engine per format (strategy pattern), coordinated by `TournamentEngine` so adding a new format does not mean rewriting the world
+- Rules, registration types, supported games validation and match generation
+
+`Competition` is the abstract base; `League` and `Tournament` are the two flavours. If you remember that, the rest of the codebase mostly explains itself. 🙂
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+You will need .NET 10 and a PostgreSQL instance. Local infra (Postgres, NATS and friends) lives in the platform `infrastructure/` compose stack.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/esports-league/backend/leagues.git
-git branch -M main
-git push -uf origin main
+```bash
+dotnet build competitions.csproj     # build it
+dotnet ef database update            # apply migrations
+dotnet run                           # gRPC server on HTTP/2
+dotnet test                          # run the tests
 ```
 
-## Integrate with your tools
+Or if you prefer it in a box 📦:
 
-- [ ] [Set up project integrations](https://gitlab.com/esports-league/backend/leagues/-/settings/integrations)
+```bash
+docker build -t competitions .
+docker run -p 8080:8080 competitions
+```
 
-## Collaborate with your team
+### Configuration
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+A handful of environment variables do the heavy lifting:
 
-## Test and Deploy
+| Variable | What it is for |
+|----------|----------------|
+| `DATABASE_URL` | PostgreSQL connection string (required, the service refuses to start without it) |
+| `NATS_URL` | NATS server for publishing domain events |
+| `KETO_URL` / `KETO_ADMIN_URL` | Ory Keto for fine-grained permissions |
+| `APP_PORT` | Defaults to `8080` |
 
-Use the built-in continuous integration in GitLab.
+## How it is built
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+A quick tour, in the order things flow:
 
-***
+- **Domain/** rich models with private constructors and factory methods, no external dependencies, business rules live here
+- **Application/** use cases (`{Action}{Entity}UseCase`), DTOs and port interfaces. Everything returns `Result<V, E>`, we do not throw for business logic
+- **Infrastructure/** EF Core entities, repositories, Keto and NATS clients, NanoID generation
+- **Transport/** the gRPC handlers that the outside world actually calls
 
-# Editing this README
+Contracts are shared as protobufs (compiled into the `gg.revyne.Contracts` NuGet package), IDs are NanoIDs with friendly prefixes like `league_…` and `tournament_…`, and errors are honest little enums rather than surprise exceptions.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+There is a `CLAUDE.md` in the root with the deeper domain detail if you want the long version. 📚
 
-## Suggestions for a good README
+## A note on conventions
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- British spelling throughout, so it is `anonymisation`, not the other one 🇬🇧
+- Always filter queries by `tenantId`. Always. We mean it
+- Use the `Result<V, E>` pattern instead of throwing for anything that is a normal business outcome
 
-## Name
-Choose a self-explaining name for your project.
+## Part of something bigger
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This service sits behind the Edge gateway alongside the other Revyne backend services (organisers, social, tenants, timeline, billing). On its own it is happy to run brackets all day, but it is most useful as one piece of the wider platform. 🎮
